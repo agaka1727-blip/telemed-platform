@@ -23,31 +23,49 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const URL = "https://ombfmuzgsnppgolbyih.supabase.co";
-    const KEY = "sb_publishable_wFHOU4Et4y_ymIDZuizkZg_0Ti3ecIs";
-    const client = window.supabase.createClient(URL, KEY);
+    // ============================================
+    // 1. ОБЪЯВЛЯЕМ ВСЕ ПЕРЕМЕННЫЕ В САМОМ НАЧАЛЕ (ГЛОБАЛЬНО)
+    // ============================================
+    const SUPABASE_URL = "https://ombfmuzgsnppgolbyih.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_wFHOU4Et4y_ymIDZuizkZg_0Ti3ecIs";
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ============================================
+    // 2. ФУНКЦИЯ ПОИСКА (РАБОТАЕТ С ГЛОБАЛЬНЫМ client)
+    // ============================================
     async function searchDoctors() {
+        // Берем значение из поля ввода
         const query = document.getElementById('searchInput').value.trim();
         const result = document.getElementById('result');
+        
+        // Показываем "Загрузку..."
         result.innerHTML = '<div class="loading">⏳ Загрузка...</div>';
 
         try {
+            // Формируем запрос к Supabase
             let request = client.from('doctors').select('*');
+
+            // Если что-то ввели в поиск — фильтруем
             if (query.length > 0) {
                 request = request.or(`full_name.ilike.%${query}%,specialization.ilike.%${query}%`);
             }
+
+            // Отправляем запрос
             const { data, error } = await request;
 
+            // Проверяем на ошибки от Supabase
             if (error) {
-                result.innerHTML = '<div class="error">❌ Ошибка: ' + error.message + '</div>';
+                result.innerHTML = '<div class="error">❌ Ошибка Supabase: ' + error.message + '</div>';
                 return;
             }
+
+            // Проверяем, есть ли данные
             if (!data || data.length === 0) {
                 result.innerHTML = '<div class="error">👀 Врачей не найдено</div>';
                 return;
             }
 
+            // Если данные есть — рисуем карточки
             let html = '';
             for (let doc of data) {
                 html += `
@@ -60,12 +78,20 @@
                 `;
             }
             result.innerHTML = html;
+
         } catch (err) {
-            result.innerHTML = '<div class="error">❌ Ошибка: ' + err.message + '</div>';
+            // Ловим любые другие ошибки (например, проблемы с интернетом)
+            result.innerHTML = '<div class="error">❌ Критическая ошибка: ' + err.message + '</div>';
+            console.error('Ошибка:', err);
         }
     }
 
-    window.onload = searchDoctors;
+    // ============================================
+    // 3. АВТОМАТИЧЕСКИ ИЩЕМ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+    // ============================================
+    window.onload = function() {
+        searchDoctors();
+    };
 </script>
 
 </body>
