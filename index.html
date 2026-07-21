@@ -1,98 +1,465 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Поиск врачей</title>
     <style>
-        body { font-family: Arial; padding: 40px; background: #f0f4f9; text-align: center; }
-        .card { background: white; border-radius: 16px; padding: 20px; max-width: 400px; margin: 20px auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: left; }
-        input { padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 8px; }
-        button { padding: 10px 20px; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        .error { color: red; }
-        .loading { color: #666; }
+        /* ----- Обнуление и база ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f0f4f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        /* ----- Шапка ----- */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .header h1 {
+            font-size: 38px;
+            font-weight: 700;
+            color: #0b2b4a;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            color: #5a6f88;
+            font-size: 18px;
+            margin-top: 6px;
+        }
+
+        /* ----- Поиск ----- */
+        .search-box {
+            background: #ffffff;
+            border-radius: 60px;
+            padding: 6px 6px 6px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            max-width: 600px;
+            margin: 0 auto 30px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            padding: 14px 0;
+            background: transparent;
+            color: #0b2b4a;
+        }
+        .search-box input::placeholder {
+            color: #9aafc4;
+        }
+        .search-box button {
+            background: #1a73e8;
+            border: none;
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .search-box button:hover {
+            background: #1558b0;
+        }
+
+        /* ----- Карточка врача ----- */
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e8edf3;
+            transition: box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.07);
+        }
+        .card-top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #dce4ed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a3d5e;
+            flex-shrink: 0;
+        }
+        .card-info {
+            flex: 1;
+        }
+        .card-info h3 {
+            font-size: 20px;
+            color: #0b2b4a;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .badge-verified {
+            background: #e6f7e6;
+            color: #1e7e34;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+        .specialization {
+            color: #1a73e8;
+            font-weight: 600;
+            font-size: 15px;
+            margin-top: 2px;
+        }
+        .symptoms {
+            margin: 10px 0 12px 0;
+        }
+        .symptom-tag {
+            display: inline-block;
+            background: #eef3f9;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #2d4059;
+            margin: 0 6px 6px 0;
+        }
+        .card-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eef3f9;
+            padding-top: 14px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0b2b4a;
+        }
+        .price small {
+            font-weight: 400;
+            font-size: 14px;
+            color: #7a8fa5;
+        }
+        .experience {
+            color: #5a6f88;
+            font-size: 15px;
+        }
+        .btn-call {
+            background: #1e7e34;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        .btn-call:hover {
+            background: #146128;
+        }
+        .bio {
+            font-size: 14px;
+            color: #5a6f88;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eef3f9;
+        }
+
+        /* ----- Состояния ----- */
+        .loading {
+            text-align: center;
+            color: #7a8fa5;
+            padding: 50px 0;
+            font-size: 18px;
+        }
+        .empty {
+            text-align: center;
+            color: #7a8fa5;
+            padding: 50px 0;
+            font-size: 18px;
+        }
+        .error {
+            text-align: center;
+            color: #d93025;
+            padding: 50px 0;
+            font-size: 18px;
+        }
+        .footer-note {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #9aafc4;
+        }
+
+        /* ----- Адаптив ----- */
+        @media (max-width: 600px) {
+            .search-box {
+                flex-wrap: wrap;
+                border-radius: 30px;
+                padding: 12px 16px;
+                background: #fff;
+            }
+            .search-box input {
+                width: 100%;
+                padding: 10px 0;
+            }
+            .search-box button {
+                width: 100%;
+                justify-content: center;
+            }
+            .card-top {
+                flex-wrap: wrap;
+            }
+            .card-bottom {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-call {
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
 
-<h1>🩺 Найти врача</h1>
-<p>Ищите по ФИО или специализации</p>
-<input type="text" id="searchInput" placeholder="Введите ФИО...">
-<button onclick="searchDoctors()">Найти</button>
+<div class="container">
+    <!-- Шапка -->
+    <div class="header">
+        <h1>🩺 Найти врача</h1>
+        <p>Ищите по ФИО, специализации или симптомам</p>
+    </div>
 
-<div id="result"></div>
+    <!-- Поиск -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Например: кардиолог, головная боль, Иванова...">
+        <button id="searchButton">Найти</button>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Результаты -->
+    <div id="result">
+        <div class="loading">⏳ Загрузка врачей...</div>
+    </div>
+
+    <div class="footer-note">
+        🔐 Администратор: добавляйте врачей в Supabase → Table Editor
+    </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+</script>
 <script>
-    // ============================================
-    // 1. ОБЪЯВЛЯЕМ ВСЕ ПЕРЕМЕННЫЕ В САМОМ НАЧАЛЕ (ГЛОБАЛЬНО)
-    // ============================================
-    const SUPABASE_URL = "https://ombfmuzgsnppgolbyih.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_wFHOU4Et4y_ymIDZuizkZg_0Ti3ecIs";
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    (function() {
+        'use strict';
 
-    // ============================================
-    // 2. ФУНКЦИЯ ПОИСКА (РАБОТАЕТ С ГЛОБАЛЬНЫМ client)
-    // ============================================
-    async function searchDoctors() {
-        // Берем значение из поля ввода
-        const query = document.getElementById('searchInput').value.trim();
-        const result = document.getElementById('result');
-        
-        // Показываем "Загрузку..."
-        result.innerHTML = '<div class="loading">⏳ Загрузка...</div>';
+        // ------------------------------------------------------------------
+        // 1. КОНФИГУРАЦИЯ (ваши данные)
+        // ------------------------------------------------------------------
+        var CONFIG = {
+            url: 'https://ombfmuzgsnppgolbyih.supabase.co',
+            key: 'sb_publishable_wFHOU4Et4y_ymIDZuizkZg_0Ti3ecIs'
+        };
 
-        try {
-            // Формируем запрос к Supabase
-            let request = client.from('doctors').select('*');
+        // ------------------------------------------------------------------
+        // 2. ИНИЦИАЛИЗАЦИЯ КЛИЕНТА
+        //    — создаём ДО того, как будут вызваны любые функции
+        // ------------------------------------------------------------------
+        var client = window.supabase.createClient(CONFIG.url, CONFIG.key);
 
-            // Если что-то ввели в поиск — фильтруем
+        // ------------------------------------------------------------------
+        // 3. ЭЛЕМЕНТЫ DOM
+        // ------------------------------------------------------------------
+        var input = document.getElementById('searchInput');
+        var button = document.getElementById('searchButton');
+        var resultContainer = document.getElementById('result');
+
+        // ------------------------------------------------------------------
+        // 4. ОСНОВНАЯ ФУНКЦИЯ ПОИСКА
+        // ------------------------------------------------------------------
+        function searchDoctors() {
+            var query = input.value.trim();
+            resultContainer.innerHTML = '<div class="loading">⏳ Ищем...</div>';
+
+            // Строим запрос
+            var request = client.from('doctors').select('*');
+
             if (query.length > 0) {
-                request = request.or(`full_name.ilike.%${query}%,specialization.ilike.%${query}%`);
+                // Ищем по ФИО, специализации и симптомам (как строка)
+                request = request.or(
+                    'full_name.ilike.%' + query + '%,' +
+                    'specialization.ilike.%' + query + '%'
+                );
+                // Дополнительно ищем в массиве symptoms (если поле есть)
+                request = request.filter('symptoms', 'cs', '{' + query + '}');
             }
 
-            // Отправляем запрос
-            const { data, error } = await request;
+            request
+                .then(function(response) {
+                    var data = response.data;
+                    var error = response.error;
 
-            // Проверяем на ошибки от Supabase
-            if (error) {
-                result.innerHTML = '<div class="error">❌ Ошибка Supabase: ' + error.message + '</div>';
-                return;
-            }
+                    if (error) {
+                        resultContainer.innerHTML = '<div class="error">❌ Ошибка БД: ' + error.message + '</div>';
+                        return;
+                    }
 
-            // Проверяем, есть ли данные
-            if (!data || data.length === 0) {
-                result.innerHTML = '<div class="error">👀 Врачей не найдено</div>';
-                return;
-            }
+                    if (!data || data.length === 0) {
+                        // Если ничего не нашли — пробуем поискать только по ФИО и специализации
+                        // (это нужно, если symptoms не сработал)
+                        var fallbackRequest = client.from('doctors').select('*');
+                        if (query.length > 0) {
+                            fallbackRequest = fallbackRequest.or(
+                                'full_name.ilike.%' + query + '%,' +
+                                'specialization.ilike.%' + query + '%'
+                            );
+                        }
+                        fallbackRequest
+                            .then(function(fallbackResponse) {
+                                var fallbackData = fallbackResponse.data;
+                                var fallbackError = fallbackResponse.error;
+                                if (fallbackError) {
+                                    resultContainer.innerHTML = '<div class="error">❌ Ошибка: ' + fallbackError.message + '</div>';
+                                    return;
+                                }
+                                if (!fallbackData || fallbackData.length === 0) {
+                                    resultContainer.innerHTML = '<div class="empty">👀 Врачей не найдено</div>';
+                                    return;
+                                }
+                                renderCards(fallbackData);
+                            })
+                            .catch(function(err) {
+                                resultContainer.innerHTML = '<div class="error">❌ Ошибка: ' + err.message + '</div>';
+                            });
+                        return;
+                    }
 
-            // Если данные есть — рисуем карточки
-            let html = '';
-            for (let doc of data) {
+                    renderCards(data);
+                })
+                .catch(function(err) {
+                    resultContainer.innerHTML = '<div class="error">❌ Ошибка сети: ' + err.message + '</div>';
+                });
+        }
+
+        // ------------------------------------------------------------------
+        // 5. ОТРИСОВКА КАРТОЧЕК
+        // ------------------------------------------------------------------
+        function renderCards(doctors) {
+            var html = '';
+            for (var i = 0; i < doctors.length; i++) {
+                var doc = doctors[i];
+
+                // Инициалы
+                var nameParts = doc.full_name ? doc.full_name.trim().split(' ') : [''];
+                var initials = '';
+                for (var j = 0; j < Math.min(nameParts.length, 2); j++) {
+                    if (nameParts[j].length > 0) {
+                        initials += nameParts[j].charAt(0).toUpperCase();
+                    }
+                }
+
+                // Симптомы
+                var symptomsHtml = '';
+                if (doc.symptoms && Array.isArray(doc.symptoms)) {
+                    for (var k = 0; k < doc.symptoms.length; k++) {
+                        symptomsHtml += '<span class="symptom-tag">' + escapeHtml(doc.symptoms[k]) + '</span>';
+                    }
+                }
+
+                // Бейдж верификации
+                var verifiedBadge = doc.verified ? '<span class="badge-verified">✅ Проверен</span>' : '';
+
+                // Био
+                var bioHtml = doc.bio ? '<div class="bio">' + escapeHtml(doc.bio) + '</div>' : '';
+
                 html += `
                     <div class="card">
-                        <h3>${doc.full_name}</h3>
-                        <p><strong>${doc.specialization}</strong></p>
-                        <p>💰 ${doc.price || 0} ₽ | Стаж ${doc.experience || 0} лет</p>
-                        <a href="https://meet.jit.si/Doctor_${doc.id}" target="_blank" style="display:inline-block;margin-top:8px;background:#1e7e34;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;">📹 Видеозвонок</a>
+                        <div class="card-top">
+                            <div class="avatar">${initials}</div>
+                            <div class="card-info">
+                                <h3>${escapeHtml(doc.full_name)} ${verifiedBadge}</h3>
+                                <div class="specialization">${escapeHtml(doc.specialization)}</div>
+                            </div>
+                        </div>
+                        ${symptomsHtml ? '<div class="symptoms">' + symptomsHtml + '</div>' : ''}
+                        <div class="card-bottom">
+                            <div>
+                                <span class="price">${doc.price || 0} <small>₽</small></span>
+                            </div>
+                            <div class="experience">Стаж ${doc.experience || 0} лет</div>
+                            <a href="https://meet.jit.si/Doctor_${doc.id}" target="_blank" class="btn-call">📹 Видеозвонок</a>
+                        </div>
+                        ${bioHtml}
                     </div>
                 `;
             }
-            result.innerHTML = html;
-
-        } catch (err) {
-            // Ловим любые другие ошибки (например, проблемы с интернетом)
-            result.innerHTML = '<div class="error">❌ Критическая ошибка: ' + err.message + '</div>';
-            console.error('Ошибка:', err);
+            resultContainer.innerHTML = html;
         }
-    }
 
-    // ============================================
-    // 3. АВТОМАТИЧЕСКИ ИЩЕМ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
-    // ============================================
-    window.onload = function() {
-        searchDoctors();
-    };
+        // ------------------------------------------------------------------
+        // 6. ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЕЗОПАСНОСТИ (экранирование)
+        // ------------------------------------------------------------------
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ------------------------------------------------------------------
+        // 7. ОБРАБОТЧИКИ СОБЫТИЙ
+        // ------------------------------------------------------------------
+        button.addEventListener('click', searchDoctors);
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchDoctors();
+            }
+        });
+
+        // ------------------------------------------------------------------
+        // 8. АВТОЗАГРУЗКА ПРИ СТАРТЕ
+        // ------------------------------------------------------------------
+        window.addEventListener('load', function() {
+            searchDoctors();
+        });
+
+    })();
 </script>
-
 </body>
 </html>
