@@ -270,14 +270,6 @@
             background: #1558b0;
             transform: scale(1.02);
         }
-        .slot.booked {
-            background: #ccc;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .slot.booked:hover {
-            transform: none;
-        }
         .btn-chat {
             background: #1a73e8;
             color: white;
@@ -606,6 +598,25 @@
             gap: 12px;
             margin-bottom: 20px;
         }
+        .doctor-cabinet .cabinet-header .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #dce4ed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a3d5e;
+            margin-bottom: 8px;
+        }
+        .doctor-cabinet .cabinet-header .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         .doctor-cabinet .cabinet-header h2 {
             color: #0b2b4a;
             font-size: 24px;
@@ -774,8 +785,6 @@
         .doctor-cabinet .add-slot-form button:hover {
             background: #1558b0;
         }
-
-        /* Регистрация */
         .register-container {
             max-width: 500px;
             margin: 40px auto;
@@ -803,7 +812,6 @@
             color: #5a6f88;
             margin-bottom: 20px;
         }
-
         .preview-img {
             width: 80px;
             height: 80px;
@@ -812,7 +820,6 @@
             margin-top: 8px;
             border: 2px solid #e8edf3;
         }
-
         @media (max-width: 768px) {
             .doctor-cabinet .cabinet-grid {
                 grid-template-columns: 1fr;
@@ -881,11 +888,7 @@
 
     <div id="adminView" class="hidden"><div class="admin-panel" id="adminPanel"></div></div>
     <div id="doctorView" class="hidden"><div class="doctor-cabinet" id="doctorCabinet"></div></div>
-
-    <!-- Регистрация врача -->
-    <div id="registerView" class="hidden">
-        <div class="register-container" id="registerContainer"></div>
-    </div>
+    <div id="registerView" class="hidden"><div class="register-container" id="registerContainer"></div></div>
 </div>
 
 <!-- ===== МОДАЛЬНОЕ ОКНО (ЗАПИСЬ) ===== -->
@@ -932,7 +935,7 @@
 
 <script>
     // ================================================================
-    // 1. ДАННЫЕ (теперь с фото)
+    // 1. ДАННЫЕ
     // ================================================================
 
     let DOCTORS = [{
@@ -948,7 +951,7 @@
         schedule: ["10:00", "11:00", "12:00", "14:00", "15:00"],
         login: "ivanov",
         password: "doc123",
-        photo: "" // base64 или URL
+        photo: ""
     }, {
         id: 2,
         full_name: "Сариева Алия",
@@ -984,34 +987,15 @@
     let currentUser = null;
     let currentFilter = 'all';
     let editingDoctorId = null;
-    let inviteToken = null; // для регистрации
+    let inviteToken = null;
+    let tempPhotoBase64 = '';
 
     // ================================================================
-    // 2. ГЕНЕРАЦИЯ УНИКАЛЬНОГО ЛОГИНА И ТОКЕНА
+    // 2. ГЕНЕРАЦИЯ ТОКЕНА
     // ================================================================
-
-    function generateLogin(fullName) {
-        const parts = fullName.trim().split(' ');
-        let base = parts[0] || 'doctor';
-        const translit = {
-            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
-            'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
-            'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-            'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
-            'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
-        };
-        let login = base.toLowerCase().split('').map(ch => translit[ch] || ch).join('');
-        let uniqueLogin = login;
-        let counter = 1;
-        while (DOCTORS.some(d => d.login === uniqueLogin)) {
-            uniqueLogin = login + counter;
-            counter++;
-        }
-        return uniqueLogin;
-    }
 
     function generateToken() {
-        return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        return 'invite_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     }
 
     // ================================================================
@@ -1108,7 +1092,7 @@
     }
 
     // ================================================================
-    // 6. РЕГИСТРАЦИЯ ВРАЧА (ПО ССЫЛКЕ-ПРИГЛАШЕНИЮ)
+    // 6. РЕГИСТРАЦИЯ ВРАЧА
     // ================================================================
 
     function openRegister(token) {
@@ -1118,10 +1102,11 @@
 
     function renderRegisterForm() {
         const container = document.getElementById('registerContainer');
+        tempPhotoBase64 = '';
         container.innerHTML = `
             <h2>📝 Регистрация врача</h2>
             <p class="sub">Заполните анкету, чтобы попасть на платформу TeleMed</p>
-            <div class="invite-badge">🔑 Приглашение: ${inviteToken}</div>
+            <div class="invite-badge">🔑 Приглашение: ${inviteToken || 'от администратора'}</div>
             <form id="registerForm" onsubmit="registerDoctor(event)">
                 <div class="form-group">
                     <label>ФИО *</label>
@@ -1169,8 +1154,6 @@
         `;
     }
 
-    let tempPhotoBase64 = '';
-
     function previewPhoto(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1200,7 +1183,6 @@
             return;
         }
 
-        // Проверка уникальности логина
         if (DOCTORS.some(d => d.login === login)) {
             document.getElementById('regError').textContent = 'Этот логин уже занят, придумайте другой';
             document.getElementById('regError').classList.add('active');
@@ -1236,17 +1218,17 @@
                 <h2 style="color:#1e7e34;">Регистрация завершена!</h2>
                 <p style="color:#5a6f88;margin:12px 0;">Врач ${fullName} добавлен на платформу.</p>
                 <p style="color:#5a6f88;">Данные отправлены на проверку администратору.</p>
+                <p style="color:#5a6f88;">Вы можете войти в кабинет по логину: <strong>${login}</strong></p>
                 <button class="btn-submit" style="margin-top:16px;" onclick="showView('public')">На главную</button>
             </div>
         `;
 
-        // Если админ залогинен — обновляем админку
         if (currentUser === 'admin') renderAdminPanel();
         searchDoctors();
     }
 
     // ================================================================
-    // 7. АДМИН-ПАНЕЛЬ (с кнопкой "Пригласить врача")
+    // 7. АДМИН-ПАНЕЛЬ
     // ================================================================
 
     function renderAdminPanel() {
@@ -1323,17 +1305,21 @@
     }
 
     // ================================================================
-    // 8. ПРИГЛАШЕНИЕ ВРАЧА (ГЕНЕРАЦИЯ ССЫЛКИ)
+    // 8. ПРИГЛАШЕНИЕ ВРАЧА
     // ================================================================
 
     function inviteDoctor() {
         const token = generateToken();
         const inviteLink = `https://telemed.kg/?register=${token}`;
-        // Сохраняем токен для использования
-        // В реальном проекте токены хранятся в базе, сейчас просто показываем
-        prompt('Скопируйте ссылку для приглашения врача:', inviteLink);
-        // Имитация: при переходе по ссылке открывается регистрация
-        // Для теста, чтобы увидеть форму: openRegister(token);
+        const input = document.createElement('input');
+        input.value = inviteLink;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        alert('✅ Ссылка-приглашение скопирована! Отправьте её врачу.\n\n' + inviteLink);
+        // Имитация открытия регистрации для теста
+        openRegister(token);
     }
 
     // ================================================================
@@ -1363,8 +1349,8 @@
         if (!spec) return;
         const price = parseInt(prompt('Введите цену (сом):')) || 3000;
         const exp = parseInt(prompt('Введите стаж (лет):')) || 10;
-        const login = generateLogin(name);
-        const password = 'doc123';
+        const login = prompt('Введите логин:') || name.toLowerCase().replace(/\s/g, '');
+        const password = prompt('Введите пароль:') || 'doc123';
         DOCTORS.push({
             id: Date.now(),
             full_name: name,
@@ -1392,7 +1378,7 @@
     }
 
     // ================================================================
-    // 10. ЛИЧНЫЙ КАБИНЕТ ВРАЧА (с фото)
+    // 10. КАБИНЕТ ВРАЧА
     // ================================================================
 
     function renderDoctorCabinet() {
@@ -1411,8 +1397,8 @@
         const isEditing = editingDoctorId === doc.id;
 
         const avatarHtml = doc.photo ?
-            `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;margin-bottom:16px;" />` :
-            `<div class="avatar">${doc.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>`;
+            `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;" />` :
+            `<div style="width:70px;height:70px;border-radius:50%;background:#dce4ed;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#1a3d5e;">${doc.full_name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()}</div>`;
 
         cabinet.innerHTML = `
             <div class="cabinet-header">
@@ -1571,7 +1557,7 @@
     }
 
     // ================================================================
-    // 12. ПОИСК И ОТРИСОВКА (с фото)
+    // 12. ПОИСК И ОТРИСОВКА
     // ================================================================
 
     function searchDoctors() {
@@ -1606,10 +1592,9 @@
             return;
         }
         container.innerHTML = doctors.map(doc => {
-            const initials = doc.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
             const avatarHtml = doc.photo ?
                 `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;" />` :
-                initials;
+                doc.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
             const symptomsHtml = doc.symptoms.map(s => `<span>${s}</span>`).join(' ');
             const verifiedBadge = doc.verified ? '<span class="verified-badge">✅ Проверен</span>' : '';
             const slotsHtml = doc.schedule.map(time =>
@@ -1700,7 +1685,7 @@
     }
 
     // ================================================================
-    // 14. ОБРАБОТКА ССЫЛКИ С ПРИГЛАШЕНИЕМ
+    // 14. ОБРАБОТКА ССЫЛКИ-ПРИГЛАШЕНИЯ
     // ================================================================
 
     function handleRegisterLink() {
@@ -1708,7 +1693,6 @@
         const token = params.get('register');
         if (token) {
             openRegister(token);
-            // Убираем параметр из URL, чтобы при обновлении не показывало регистрацию
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
@@ -1729,6 +1713,5 @@
         });
     });
 </script>
-
 </body>
 </html>
