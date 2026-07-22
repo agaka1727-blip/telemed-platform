@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Поиск врачей — TeleMed</title>
     <style>
-        /* ===== ОБЩИЕ СТИЛИ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -185,7 +184,6 @@
         .btn-chat:hover {
             background: #1558b0;
         }
-        /* Слоты времени */
         .slot {
             display: inline-block;
             padding: 6px 14px;
@@ -244,7 +242,7 @@
             color: #9aafc4;
         }
 
-        /* ===== МОДАЛЬНОЕ ОКНО (ФОРМА) ===== */
+        /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
@@ -370,6 +368,12 @@
         .form-error.active {
             display: block;
         }
+        .video-note {
+            font-size: 12px;
+            color: #7a8fa5;
+            margin-top: 6px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -395,16 +399,15 @@
     </div>
 
     <div class="admin-note">
-        🔐 Администратор: редактируйте список врачей в коде ниже (массив DOCTORS)
+        🔐 Администратор: редактируйте список врачей в коде (массив DOCTORS)
     </div>
 </div>
 
-<!-- ===== МОДАЛЬНОЕ ОКНО С ФОРМОЙ ===== -->
+<!-- ===== МОДАЛЬНОЕ ОКНО ===== -->
 <div class="modal" id="bookingModal">
     <div class="modal-content">
         <button class="close" onclick="closeModal()">✕</button>
 
-        <!-- Форма -->
         <div id="formContainer">
             <h2>📋 Запись на консультацию</h2>
             <p class="sub" id="modalDoctorInfo">Врач: Иванов Сергей Петрович</p>
@@ -431,14 +434,14 @@
                 <div class="form-error" id="formError">Пожалуйста, заполните все обязательные поля</div>
 
                 <button type="submit" class="btn-submit" id="submitBtn">📩 Отправить заявку</button>
+                <div class="video-note">Ссылка на видеозвонок придёт после подтверждения записи</div>
             </form>
         </div>
 
-        <!-- Успех -->
         <div class="form-success" id="formSuccess">
             <div class="icon">✅</div>
             <h3>Заявка отправлена!</h3>
-            <p>Мы свяжемся с вами в ближайшее время для подтверждения записи.</p>
+            <p>Мы свяжемся с вами для подтверждения записи и пришлём ссылку на видеозвонок.</p>
             <button class="btn-submit" style="margin-top:16px;" onclick="closeModal()">Закрыть</button>
         </div>
     </div>
@@ -446,7 +449,7 @@
 
 <script>
     // ============================================================
-    // 1. БАЗА ДАННЫХ ВРАЧЕЙ (ДОБАВЛЯЙТЕ ВРАЧЕЙ СЮДА!)
+    // 1. БАЗА ДАННЫХ ВРАЧЕЙ
     // ============================================================
     const DOCTORS = [
         {
@@ -491,7 +494,7 @@
     let selectedTime = '';
 
     // ============================================================
-    // 3. ОТКРЫТЬ ФОРМУ
+    // 3. ОТКРЫТЬ/ЗАКРЫТЬ ФОРМУ
     // ============================================================
     function openBooking(doctorName, time) {
         selectedDoctor = doctorName;
@@ -500,12 +503,12 @@
         document.getElementById('modalDoctorInfo').textContent = `Врач: ${doctorName}`;
         document.getElementById('modalTimeInfo').textContent = `Время: ${time || 'не выбрано'}`;
 
-        // Сброс формы
         document.getElementById('bookingForm').reset();
         document.getElementById('formContainer').style.display = 'block';
         document.getElementById('formSuccess').classList.remove('active');
         document.getElementById('formError').classList.remove('active');
         document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
 
         document.getElementById('bookingModal').classList.add('active');
     }
@@ -514,7 +517,6 @@
         document.getElementById('bookingModal').classList.remove('active');
     }
 
-    // Закрытие по клику вне модалки
     document.getElementById('bookingModal').addEventListener('click', function(e) {
         if (e.target === this) closeModal();
     });
@@ -541,12 +543,8 @@
         document.getElementById('submitBtn').textContent = '⏳ Отправка...';
 
         // ============================================================
-        // 🔵 ЗДЕСЬ НАСТРОЙТЕ ПОЛУЧЕНИЕ ЗАЯВОК
+        // ОТПРАВКА В TELEGRAM (раскомментируй, когда настроишь бота)
         // ============================================================
-
-        // --- ВАРИАНТ 1: Telegram (рекомендуется) ---
-        // 1. Создайте бота у @BotFather
-        // 2. Замените BOT_TOKEN и CHAT_ID ниже
         /*
         const BOT_TOKEN = 'ВАШ_ТОКЕН';
         const CHAT_ID = 'ВАШ_CHAT_ID';
@@ -567,19 +565,10 @@
         .catch(() => showError());
         */
 
-        // --- ВАРИАНТ 2: Просто показать успех (для теста) ---
-        // Показываем сообщение об успехе (для теста)
+        // ============================================================
+        // ПОКАЗЫВАЕМ УСПЕХ (для теста)
+        // ============================================================
         showSuccess();
-
-        // --- ВАРИАНТ 3: Отправка на email (через FormSubmit.co) ---
-        // Раскомментируйте, если хотите отправлять на почту
-        /*
-        const form = document.getElementById('bookingForm');
-        const action = 'https://formsubmit.co/ВАША_ПОЧТА@gmail.com';
-        form.action = action;
-        form.method = 'POST';
-        form.submit();
-        */
     }
 
     function showSuccess() {
@@ -590,14 +579,14 @@
     }
 
     function showError() {
-        document.getElementById('formError').textContent = 'Ошибка отправки. Попробуйте позже или напишите нам в WhatsApp';
+        document.getElementById('formError').textContent = 'Ошибка отправки. Попробуйте позже.';
         document.getElementById('formError').classList.add('active');
         document.getElementById('submitBtn').disabled = false;
         document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
     }
 
     // ============================================================
-    // 5. ПОИСК И ФИЛЬТРАЦИЯ
+    // 5. ПОИСК И ФИЛЬТРЫ
     // ============================================================
     let currentFilter = 'all';
 
@@ -634,7 +623,7 @@
     }
 
     // ============================================================
-    // 6. ОТРИСОВКА КАРТОЧЕК
+    // 6. ОТРИСОВКА КАРТОЧЕК (БЕЗ КНОПКИ ВИДЕОЗВОНКА)
     // ============================================================
     function renderDoctors(doctors) {
         const container = document.getElementById('doctorsContainer');
@@ -660,8 +649,6 @@
             const verifiedBadge = doc.verified
                 ? '<span class="verified-badge">✅ Проверен</span>'
                 : '';
-
-            const videoLink = doc.video || `https://meet.jit.si/Doctor_${doc.id}`;
 
             let slotsHtml = '';
             if (doc.schedule && Array.isArray(doc.schedule)) {
@@ -698,7 +685,6 @@
                         <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">
                             💬 Записаться
                         </button>
-                        <a href="${videoLink}" target="_blank" class="btn-call">📹 Видеозвонок</a>
                     </div>
 
                     ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
