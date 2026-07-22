@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TeleMed — Поиск врачей</title>
     <style>
-        /* ===== ВСЕ СТИЛИ (без изменений) ===== */
+        /* ===== БАЗОВЫЕ СТИЛИ (сокращены для экономии места) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -568,6 +568,25 @@
         .admin-actions .btn-verify:hover {
             background: #c8e6c8;
         }
+        .admin-actions .btn-reject {
+            background: #fde8e8;
+            color: #b91c1c;
+        }
+        .admin-actions .btn-reject:hover {
+            background: #f5c2c2;
+        }
+        .admin-actions .btn-view-doc {
+            background: #eef3f9;
+            color: #0b2b4a;
+            text-decoration: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .admin-actions .btn-view-doc:hover {
+            background: #dce4ed;
+        }
         .admin-add-btn {
             background: #1a73e8;
             color: white;
@@ -584,11 +603,31 @@
         .admin-add-btn:hover {
             background: #1558b0;
         }
-        .admin-add-btn.import {
-            background: #0b2b4a;
+        .admin-filter {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
         }
-        .admin-add-btn.import:hover {
-            background: #1a3d5e;
+        .admin-filter button {
+            background: white;
+            border: 1.5px solid #e8edf3;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #0b2b4a;
+            font-family: inherit;
+        }
+        .admin-filter button.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+        .admin-filter button:hover:not(.active) {
+            border-color: #1a73e8;
         }
         .doctor-cabinet {
             background: white;
@@ -641,6 +680,10 @@
         .doctor-cabinet .cabinet-header .status.pending {
             background: #fff8e6;
             color: #7a6500;
+        }
+        .doctor-cabinet .cabinet-header .status.rejected {
+            background: #fde8e8;
+            color: #b91c1c;
         }
         .doctor-cabinet .cabinet-grid {
             display: grid;
@@ -950,6 +993,21 @@
             margin-top: 8px;
             border: 2px solid #e8edf3;
         }
+        .moderation-doc {
+            display: inline-block;
+            padding: 2px 10px;
+            background: #eef3f9;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 2px 4px 2px 0;
+        }
+        .moderation-doc a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .moderation-doc a:hover {
+            text-decoration: underline;
+        }
         @media (max-width: 768px) {
             .doctor-cabinet .cabinet-grid {
                 grid-template-columns: 1fr;
@@ -1066,6 +1124,15 @@
     </div>
 </div>
 
+<!-- ===== МОДАЛЬНОЕ ОКНО (МОДЕРАЦИЯ) ===== -->
+<div class="modal" id="moderationModal">
+    <div class="modal-content" style="max-width:700px;">
+        <button class="close" onclick="closeModerationModal()">✕</button>
+        <h2>🔍 Модерация врача</h2>
+        <div id="moderationContent"></div>
+    </div>
+</div>
+
 <script>
     // ================================================================
     // 1. ДАННЫЕ
@@ -1087,7 +1154,8 @@
         photo: "",
         diploma: "",
         certificate: "",
-        qualification: ""
+        qualification: "",
+        moderationComment: ""
     }, {
         id: 2,
         full_name: "Сариева Алия",
@@ -1104,7 +1172,8 @@
         photo: "",
         diploma: "",
         certificate: "",
-        qualification: ""
+        qualification: "",
+        moderationComment: ""
     }, {
         id: 3,
         full_name: "Петрова Елена Викторовна",
@@ -1121,19 +1190,25 @@
         photo: "",
         diploma: "",
         certificate: "",
-        qualification: ""
+        qualification: "",
+        moderationComment: ""
     }];
 
     const ADMIN = { login: "admin", password: "admin123" };
     let bookings = [];
     let currentUser = null;
     let currentFilter = 'all';
+    let adminFilter = 'all';
     let editingDoctorId = null;
     let inviteToken = null;
     let tempPhotoBase64 = '';
     let tempDiplomaBase64 = '';
     let tempCertificateBase64 = '';
     let tempQualificationBase64 = '';
+    let tempEditPhoto = '';
+    let tempEditDiploma = '';
+    let tempEditCertificate = '';
+    let tempEditQualification = '';
 
     // ================================================================
     // 2. ГЕНЕРАЦИЯ ТОКЕНА
@@ -1248,26 +1323,33 @@
     function renderRegisterForm() {
         const container = document.getElementById('registerContainer');
         tempPhotoBase64 = '';
+        tempDiplomaBase64 = '';
+        tempCertificateBase64 = '';
+        tempQualificationBase64 = '';
         container.innerHTML = `
             <h2>📝 Регистрация врача</h2>
             <p class="sub">Заполните анкету, чтобы попасть на платформу TeleMed</p>
             <div class="invite-badge">🔑 Приглашение: ${inviteToken || 'от администратора'}</div>
             <form id="registerForm" onsubmit="registerDoctor(event)">
-                <div class="form-group">
-                    <label>ФИО *</label>
-                    <input type="text" id="regFullName" placeholder="Иванов Иван Иванович" required />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ФИО *</label>
+                        <input type="text" id="regFullName" placeholder="Иванов Иван Иванович" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Специализация *</label>
+                        <input type="text" id="regSpecialization" placeholder="Врач-уролог" required />
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Специализация *</label>
-                    <input type="text" id="regSpecialization" placeholder="Врач-уролог" required />
-                </div>
-                <div class="form-group">
-                    <label>Стаж (лет) *</label>
-                    <input type="number" id="regExperience" placeholder="10" required />
-                </div>
-                <div class="form-group">
-                    <label>Цена консультации (сом) *</label>
-                    <input type="number" id="regPrice" placeholder="3000" required />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Стаж (лет) *</label>
+                        <input type="number" id="regExperience" placeholder="10" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Цена консультации (сом) *</label>
+                        <input type="number" id="regPrice" placeholder="3000" required />
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Краткое описание (био)</label>
@@ -1278,17 +1360,34 @@
                     <input type="text" id="regSymptoms" placeholder="цистит, простатит, мочекаменная болезнь" required />
                 </div>
                 <div class="form-group">
-                    <label>Фото (аватарка)</label>
-                    <input type="file" id="regPhoto" accept="image/*" onchange="previewPhoto(event)" />
-                    <div id="photoPreview"></div>
+                    <label>📷 Фото (аватарка)</label>
+                    <input type="file" id="regPhoto" accept="image/*" onchange="previewRegPhoto(event)" />
+                    <div id="regPhotoPreview"></div>
                 </div>
                 <div class="form-group">
-                    <label>Придумайте логин *</label>
-                    <input type="text" id="regLogin" placeholder="ivanov" required />
+                    <label>🎓 Диплом (PDF или изображение)</label>
+                    <input type="file" id="regDiploma" accept=".pdf,image/*" onchange="previewRegDiploma(event)" />
+                    <div id="regDiplomaPreview"></div>
                 </div>
                 <div class="form-group">
-                    <label>Пароль *</label>
-                    <input type="text" id="regPassword" placeholder="придумайте пароль" required />
+                    <label>📜 Сертификат (PDF или изображение)</label>
+                    <input type="file" id="regCertificate" accept=".pdf,image/*" onchange="previewRegCertificate(event)" />
+                    <div id="regCertificatePreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>📈 Повышение квалификации (PDF или изображение)</label>
+                    <input type="file" id="regQualification" accept=".pdf,image/*" onchange="previewRegQualification(event)" />
+                    <div id="regQualificationPreview"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Придумайте логин *</label>
+                        <input type="text" id="regLogin" placeholder="ivanov" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Пароль *</label>
+                        <input type="text" id="regPassword" placeholder="придумайте пароль" required />
+                    </div>
                 </div>
                 <div class="form-error" id="regError">Пожалуйста, заполните все поля</div>
                 <button type="submit" class="btn-submit" id="regSubmitBtn">📩 Зарегистрироваться</button>
@@ -1299,14 +1398,50 @@
         `;
     }
 
-    function previewPhoto(e) {
+    function previewRegPhoto(e) {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(ev) {
             tempPhotoBase64 = ev.target.result;
-            document.getElementById('photoPreview').innerHTML =
+            document.getElementById('regPhotoPreview').innerHTML =
                 `<img src="${tempPhotoBase64}" class="preview-img" />`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function previewRegDiploma(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            tempDiplomaBase64 = ev.target.result;
+            document.getElementById('regDiplomaPreview').innerHTML =
+                `<span class="file-name">📎 ${file.name}</span>`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function previewRegCertificate(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            tempCertificateBase64 = ev.target.result;
+            document.getElementById('regCertificatePreview').innerHTML =
+                `<span class="file-name">📎 ${file.name}</span>`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function previewRegQualification(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            tempQualificationBase64 = ev.target.result;
+            document.getElementById('regQualificationPreview').innerHTML =
+                `<span class="file-name">📎 ${file.name}</span>`;
         };
         reader.readAsDataURL(file);
     }
@@ -1350,9 +1485,10 @@
             login: login,
             password: password,
             photo: tempPhotoBase64 || '',
-            diploma: '',
-            certificate: '',
-            qualification: ''
+            diploma: tempDiplomaBase64 || '',
+            certificate: tempCertificateBase64 || '',
+            qualification: tempQualificationBase64 || '',
+            moderationComment: ''
         };
 
         DOCTORS.push(newDoctor);
@@ -1373,22 +1509,39 @@
 
         if (currentUser === 'admin') renderAdminPanel();
         searchDoctors();
+        // Очищаем временные переменные
+        tempPhotoBase64 = '';
+        tempDiplomaBase64 = '';
+        tempCertificateBase64 = '';
+        tempQualificationBase64 = '';
     }
 
     // ================================================================
-    // 7. АДМИН-ПАНЕЛЬ
+    // 7. АДМИН-ПАНЕЛЬ С МОДЕРАЦИЕЙ
     // ================================================================
 
     function renderAdminPanel() {
         const panel = document.getElementById('adminPanel');
+
+        // Фильтруем врачей по статусу модерации
+        let filteredDoctors = DOCTORS;
+        if (adminFilter === 'pending') {
+            filteredDoctors = DOCTORS.filter(d => !d.verified);
+        } else if (adminFilter === 'verified') {
+            filteredDoctors = DOCTORS.filter(d => d.verified);
+        }
+
         const totalDoctors = DOCTORS.length;
         const verifiedDoctors = DOCTORS.filter(d => d.verified).length;
+        const pendingDoctors = DOCTORS.filter(d => !d.verified).length;
         const totalBookings = bookings.length;
         const pendingBookings = bookings.filter(b => b.status === 'pending').length;
 
-        let doctorsHtml = DOCTORS.map(d => `
+        let doctorsHtml = filteredDoctors.map(d => {
+            const hasDocs = d.diploma || d.certificate || d.qualification;
+            return `
             <tr>
-                <td>${d.full_name}</td>
+                <td><strong>${d.full_name}</strong></td>
                 <td>${d.specialization}</td>
                 <td>${d.experience} лет</td>
                 <td>${d.price} сом</td>
@@ -1397,17 +1550,20 @@
                     <span class="status-badge ${d.verified ? 'green' : 'yellow'}">
                         ${d.verified ? '✅ Проверен' : '⏳ Ожидает'}
                     </span>
+                    ${d.moderationComment ? `<br><span style="font-size:11px;color:#d93025;">${d.moderationComment}</span>` : ''}
                 </td>
                 <td>
                     <div class="admin-actions">
-                        <button class="btn-verify" onclick="toggleVerify(${d.id})">
-                            ${d.verified ? '❌ Снять' : '✅ Подтвердить'}
-                        </button>
+                        ${!d.verified ? `
+                            <button class="btn-verify" onclick="openModeration(${d.id})">🔍 Проверить</button>
+                        ` : `
+                            <button class="btn-edit" onclick="toggleVerify(${d.id})">❌ Снять</button>
+                        `}
                         <button class="btn-delete" onclick="deleteDoctor(${d.id})">🗑️</button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
 
         let bookingsHtml = bookings.map(b => `
             <tr>
@@ -1434,16 +1590,26 @@
             <div class="admin-stats">
                 <div class="stat"><div class="number">${totalDoctors}</div><div class="label">Всего врачей</div></div>
                 <div class="stat"><div class="number">${verifiedDoctors}</div><div class="label">Проверенных</div></div>
+                <div class="stat"><div class="number">${pendingDoctors}</div><div class="label">Ожидают проверки</div></div>
                 <div class="stat"><div class="number">${totalBookings}</div><div class="label">Всего заявок</div></div>
                 <div class="stat"><div class="number">${pendingBookings}</div><div class="label">Ожидают</div></div>
             </div>
+
             <h3 style="margin-top:24px;">👨‍⚕️ Врачи</h3>
             <button class="admin-add-btn" onclick="inviteDoctor()">📨 Пригласить врача</button>
             <button class="admin-add-btn" style="background:#eef3f9;color:#0b2b4a;" onclick="addDoctor()">➕ Добавить вручную</button>
+
+            <div class="admin-filter">
+                <button class="${adminFilter === 'all' ? 'active' : ''}" onclick="setAdminFilter('all')">Все (${totalDoctors})</button>
+                <button class="${adminFilter === 'pending' ? 'active' : ''}" onclick="setAdminFilter('pending')">⏳ Ожидают (${pendingDoctors})</button>
+                <button class="${adminFilter === 'verified' ? 'active' : ''}" onclick="setAdminFilter('verified')">✅ Проверенные (${verifiedDoctors})</button>
+            </div>
+
             <table class="admin-table">
                 <thead><tr><th>ФИО</th><th>Специализация</th><th>Стаж</th><th>Цена</th><th>Логин</th><th>Статус</th><th>Действия</th></tr></thead>
-                <tbody>${doctorsHtml}</tbody>
+                <tbody>${doctorsHtml || '<tr><td colspan="7">Нет врачей в этом фильтре</td></tr>'}</tbody>
             </table>
+
             <h3 style="margin-top:24px;">📋 Заявки</h3>
             <table class="admin-table">
                 <thead><tr><th>Пациент</th><th>Телефон</th><th>Врач</th><th>Время</th><th>Статус</th><th>Действия</th></tr></thead>
@@ -1452,8 +1618,111 @@
         `;
     }
 
+    function setAdminFilter(filter) {
+        adminFilter = filter;
+        renderAdminPanel();
+    }
+
     // ================================================================
-    // 8. ПРИГЛАШЕНИЕ ВРАЧА
+    // 8. МОДЕРАЦИЯ ВРАЧА
+    // ================================================================
+
+    function openModeration(id) {
+        const doctor = DOCTORS.find(d => d.id === id);
+        if (!doctor) return;
+
+        const modal = document.getElementById('moderationModal');
+        const content = document.getElementById('moderationContent');
+
+        const renderFile = (base64, label) => {
+            if (base64) {
+                if (base64.startsWith('data:image')) {
+                    return `<img src="${base64}" style="max-width:150px;max-height:150px;border-radius:12px;border:2px solid #e8edf3;margin:4px;" />`;
+                } else {
+                    return `<div style="padding:8px 16px;background:#eef3f9;border-radius:12px;display:inline-block;margin:4px;">📎 ${label}</div>`;
+                }
+            }
+            return `<span style="color:#7a8fa5;">Не загружен</span>`;
+        };
+
+        content.innerHTML = `
+            <div style="margin-bottom:16px;">
+                <h3>${doctor.full_name}</h3>
+                <p style="color:#5a6f88;">${doctor.specialization} · Стаж ${doctor.experience} лет</p>
+                <p>💰 ${doctor.price} сом</p>
+                <p style="margin-top:8px;"><strong>Био:</strong> ${doctor.bio || 'не указано'}</p>
+                <p><strong>Симптомы:</strong> ${doctor.symptoms ? doctor.symptoms.join(', ') : 'не указаны'}</p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
+                <div style="background:#f8fafc;padding:12px;border-radius:12px;">
+                    <strong>📷 Фото</strong>
+                    <div>${doctor.photo ? `<img src="${doctor.photo}" style="max-width:100px;max-height:100px;border-radius:50%;border:2px solid #e8edf3;margin-top:8px;" />` : 'Не загружено'}</div>
+                </div>
+                <div style="background:#f8fafc;padding:12px;border-radius:12px;">
+                    <strong>🎓 Диплом</strong>
+                    <div style="margin-top:8px;">${renderFile(doctor.diploma, 'Диплом')}</div>
+                </div>
+                <div style="background:#f8fafc;padding:12px;border-radius:12px;">
+                    <strong>📜 Сертификат</strong>
+                    <div style="margin-top:8px;">${renderFile(doctor.certificate, 'Сертификат')}</div>
+                </div>
+                <div style="background:#f8fafc;padding:12px;border-radius:12px;">
+                    <strong>📈 Повышение квалификации</strong>
+                    <div style="margin-top:8px;">${renderFile(doctor.qualification, 'Повышение квалификации')}</div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+                <label>Комментарий модератора (для врача)</label>
+                <textarea id="moderationComment" rows="2" placeholder="Укажите причину отклонения или замечания..." style="width:100%;padding:10px;border:1.5px solid #e8edf3;border-radius:12px;font-family:inherit;font-size:14px;">${doctor.moderationComment || ''}</textarea>
+            </div>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
+                <button class="btn-success" onclick="approveDoctor(${doctor.id})" style="padding:10px 24px;border:none;border-radius:30px;font-weight:600;cursor:pointer;">
+                    ✅ Одобрить
+                </button>
+                <button class="btn-danger" onclick="rejectDoctor(${doctor.id})" style="padding:10px 24px;border:none;border-radius:30px;font-weight:600;cursor:pointer;">
+                    ❌ Отклонить
+                </button>
+                <button class="cancel-btn" onclick="closeModerationModal()" style="padding:10px 24px;border:none;border-radius:30px;font-weight:600;cursor:pointer;background:#eef3f9;color:#0b2b4a;">
+                    Закрыть
+                </button>
+            </div>
+        `;
+
+        modal.classList.add('active');
+    }
+
+    function closeModerationModal() {
+        document.getElementById('moderationModal').classList.remove('active');
+    }
+
+    function approveDoctor(id) {
+        const doctor = DOCTORS.find(d => d.id === id);
+        if (!doctor) return;
+        doctor.verified = true;
+        doctor.moderationComment = '';
+        closeModerationModal();
+        renderAdminPanel();
+        searchDoctors();
+        alert(`✅ Врач ${doctor.full_name} одобрен!`);
+    }
+
+    function rejectDoctor(id) {
+        const doctor = DOCTORS.find(d => d.id === id);
+        if (!doctor) return;
+        const comment = document.getElementById('moderationComment').value.trim();
+        doctor.moderationComment = comment || 'Документы не прошли проверку';
+        doctor.verified = false;
+        closeModerationModal();
+        renderAdminPanel();
+        searchDoctors();
+        alert(`❌ Врач ${doctor.full_name} отклонён. Комментарий отправлен врачу.`);
+    }
+
+    // ================================================================
+    // 9. ОСТАЛЬНЫЕ ФУНКЦИИ (ПРИГЛАШЕНИЕ, ДОБАВЛЕНИЕ, УДАЛЕНИЕ)
     // ================================================================
 
     function inviteDoctor() {
@@ -1469,23 +1738,28 @@
         openRegister(token);
     }
 
-    // ================================================================
-    // 9. АДМИН-ДЕЙСТВИЯ
-    // ================================================================
-
     function toggleVerify(id) {
         const doctor = DOCTORS.find(d => d.id === id);
-        if (doctor) { doctor.verified = !doctor.verified;
+        if (doctor) {
+            doctor.verified = !doctor.verified;
+            if (!doctor.verified) {
+                doctor.moderationComment = 'Снят с проверки администратором';
+            } else {
+                doctor.moderationComment = '';
+            }
             renderAdminPanel();
-            searchDoctors(); }
+            searchDoctors();
+        }
     }
 
     function deleteDoctor(id) {
         if (confirm('Удалить врача?')) {
             const index = DOCTORS.findIndex(d => d.id === id);
-            if (index !== -1) { DOCTORS.splice(index, 1);
+            if (index !== -1) {
+                DOCTORS.splice(index, 1);
                 renderAdminPanel();
-                searchDoctors(); }
+                searchDoctors();
+            }
         }
     }
 
@@ -1514,7 +1788,8 @@
             photo: '',
             diploma: '',
             certificate: '',
-            qualification: ''
+            qualification: '',
+            moderationComment: ''
         });
         renderAdminPanel();
         searchDoctors();
@@ -1523,12 +1798,15 @@
 
     function updateBooking(id, status) {
         const booking = bookings.find(b => b.id === id);
-        if (booking) { booking.status = status;
-            renderAdminPanel(); if (currentUser && currentUser.login) renderDoctorCabinet(); }
+        if (booking) {
+            booking.status = status;
+            renderAdminPanel();
+            if (currentUser && currentUser.login) renderDoctorCabinet();
+        }
     }
 
     // ================================================================
-    // 10. КАБИНЕТ ВРАЧА (С ПОЛНОЙ РЕДАКТИРУЕМОЙ АНКЕТОЙ)
+    // 10. КАБИНЕТ ВРАЧА (с отображением статуса модерации)
     // ================================================================
 
     function renderDoctorCabinet() {
@@ -1538,8 +1816,7 @@
 
         const isEditing = editingDoctorId === doc.id;
 
-        // Функция для отображения превью файла
-        const renderFilePreview = (base64, label, type) => {
+        const renderFilePreview = (base64, label) => {
             if (base64) {
                 if (base64.startsWith('data:image')) {
                     return `<img src="${base64}" style="max-width:80px;max-height:80px;border-radius:8px;border:2px solid #e8edf3;vertical-align:middle;" /><span class="file-name" style="margin-left:8px;">${label}</span>`;
@@ -1554,6 +1831,16 @@
             `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;" />` :
             `<div style="width:70px;height:70px;border-radius:50%;background:#dce4ed;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#1a3d5e;">${doc.full_name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()}</div>`;
 
+        let statusClass = 'pending';
+        let statusText = '⏳ Ожидает проверки';
+        if (doc.verified) {
+            statusClass = 'verified';
+            statusText = '✅ Документы проверены';
+        } else if (doc.moderationComment) {
+            statusClass = 'rejected';
+            statusText = '❌ Требуется доработка';
+        }
+
         cabinet.innerHTML = `
             <div class="cabinet-header">
                 <div>
@@ -1561,10 +1848,15 @@
                     <h2>👨‍⚕️ ${doc.full_name}</h2>
                     <p style="color:#5a6f88;">${doc.specialization} · Стаж ${doc.experience} лет</p>
                 </div>
-                <span class="status ${doc.verified ? 'verified' : 'pending'}">
-                    ${doc.verified ? '✅ Документы проверены' : '⏳ Ожидает проверки'}
-                </span>
+                <span class="status ${statusClass}">${statusText}</span>
             </div>
+
+            ${doc.moderationComment && !doc.verified ? `
+                <div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:16px;border-left:4px solid #b91c1c;">
+                    <strong style="color:#b91c1c;">📌 Комментарий модератора:</strong>
+                    <p style="color:#5a6f88;margin-top:4px;">${doc.moderationComment}</p>
+                </div>
+            ` : ''}
 
             <div class="login-info">
                 <strong>🔑 Ваши данные для входа:</strong><br />
@@ -1651,7 +1943,7 @@
                     <div class="info-item"><span class="label">Стаж</span><span class="value">${doc.experience} лет</span></div>
                     <div class="info-item"><span class="label">Цена</span><span class="value">${doc.price} сом</span></div>
                     <div class="info-item"><span class="label">Симптомы</span><span class="value">${doc.symptoms ? doc.symptoms.join(', ') : 'не указаны'}</span></div>
-                    <div class="info-item"><span class="label">Статус</span><span class="value">${doc.verified ? '✅ Проверен' : '⏳ Ожидает'}</span></div>
+                    <div class="info-item"><span class="label">Статус</span><span class="value">${doc.verified ? '✅ Проверен' : doc.moderationComment ? '❌ Отклонён' : '⏳ Ожидает'}</span></div>
                     ${!isEditing ? `<button class="edit-btn" onclick="startEdit()">✏️ Редактировать профиль</button>` : ''}
                 </div>
 
@@ -1697,13 +1989,8 @@
     }
 
     // ================================================================
-    // 11. ФУНКЦИИ РЕДАКТИРОВАНИЯ ПРОФИЛЯ
+    // 11. ФУНКЦИИ РЕДАКТИРОВАНИЯ (сокращены для экономии места)
     // ================================================================
-
-    let tempEditPhoto = '';
-    let tempEditDiploma = '';
-    let tempEditCertificate = '';
-    let tempEditQualification = '';
 
     function startEdit() {
         if (currentUser && currentUser.login) {
@@ -1802,17 +2089,24 @@
         if (tempEditCertificate) doc.certificate = tempEditCertificate;
         if (tempEditQualification) doc.qualification = tempEditQualification;
 
+        // Если врач загрузил новые документы, сбрасываем статус проверки
+        if (tempEditDiploma || tempEditCertificate || tempEditQualification) {
+            doc.verified = false;
+            doc.moderationComment = 'Документы обновлены, требуется повторная проверка';
+        }
+
         currentUser = doc;
         editingDoctorId = null;
         document.getElementById('editProfileStatus').innerHTML = '<div class="status-msg success">✅ Профиль успешно обновлён!</div>';
         setTimeout(() => {
             renderDoctorCabinet();
             searchDoctors();
+            if (currentUser === 'admin') renderAdminPanel();
         }, 1500);
     }
 
     // ================================================================
-    // 12. ДЕЙСТВИЯ В КАБИНЕТЕ
+    // 12. РАСПИСАНИЕ И ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     // ================================================================
 
     function addSlot() {
@@ -1851,7 +2145,7 @@
     }
 
     // ================================================================
-    // 13. ПОИСК И ОТРИСОВКА
+    // 13. ПОИСК И ОТРИСОВКА (ПУБЛИЧНАЯ ЧАСТЬ)
     // ================================================================
 
     function searchDoctors() {
@@ -1918,7 +2212,7 @@
     }
 
     // ================================================================
-    // 14. ЗАПИСЬ
+    // 14. ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
     // ================================================================
 
     let selectedDoctor = '';
@@ -2004,6 +2298,9 @@
         });
         document.getElementById('loginModal').addEventListener('click', function(e) {
             if (e.target === this) closeLoginModal();
+        });
+        document.getElementById('moderationModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModerationModal();
         });
     });
 </script>
