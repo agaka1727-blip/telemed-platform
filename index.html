@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TeleMed — Поиск врачей</title>
     <style>
-        /* ===== БАЗОВЫЕ СТИЛИ (ПОЛНАЯ ВЕРСИЯ) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -294,6 +293,23 @@
         }
         .btn-chat:hover {
             background: #1558b0;
+        }
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            font-family: inherit;
+        }
+        .btn-whatsapp:hover {
+            background: #1da851;
         }
         .btn-danger {
             background: #d93025;
@@ -733,7 +749,6 @@
             color: #5a6f88;
         }
         .doctor-cabinet .video-link {
-            display: inline-block;
             background: #1e7e34;
             color: white;
             padding: 10px 20px;
@@ -741,7 +756,7 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 14px;
-            margin-top: 8px;
+            display: inline-block;
         }
         .doctor-cabinet .video-link:hover {
             background: #146128;
@@ -1004,6 +1019,18 @@
         .forgot-link:hover {
             text-decoration: underline;
         }
+        .booking-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+        .booking-buttons .btn-chat,
+        .booking-buttons .btn-whatsapp {
+            flex: 1;
+            min-width: 140px;
+            text-align: center;
+        }
         @media (max-width: 768px) {
             .doctor-cabinet .cabinet-grid {
                 grid-template-columns: 1fr;
@@ -1030,6 +1057,10 @@
             .modal-content {
                 padding: 20px;
                 margin: 10px;
+            }
+            .booking-buttons .btn-chat,
+            .booking-buttons .btn-whatsapp {
+                min-width: 100%;
             }
         }
         @media (max-width: 480px) {
@@ -1164,8 +1195,20 @@
 
 <script>
     // ================================================================
-    // 1. ДАННЫЕ (с секретным вопросом)
+    // 1. ДАННЫЕ
     // ================================================================
+
+    // 🔑 ТОКЕН ВАШЕГО TELEGRAM-БОТА
+    const TELEGRAM_BOT_TOKEN = '8967561780:AAFtmayAaVgJBm0EUkB9BhZB4n02S3VDyQw';
+
+    // 📨 CHAT ID ВРАЧА (замените на реальный)
+    const TELEGRAM_CHAT_IDS = [
+        'ЗАМЕНИТЕ_НА_CHAT_ID'  // <- СЮДА ВСТАВЬТЕ НОМЕР CHAT ID
+    ];
+
+    // 📱 НОМЕР ТЕЛЕФОНА ДЛЯ WHATSAPP (в международном формате без +)
+    // Например, если номер +996552910846, то пишем 996552910846
+    const WHATSAPP_PHONE = '996552910846';
 
     let DOCTORS = [{
         id: 1,
@@ -1186,7 +1229,8 @@
         qualification: "",
         moderationComment: "",
         secretQuestion: "Кличка вашего первого питомца?",
-        secretAnswer: "шарик"
+        secretAnswer: "шарик",
+        whatsapp: "996700123456"  // номер врача для WhatsApp (если есть)
     }, {
         id: 2,
         full_name: "Сариева Алия",
@@ -1206,7 +1250,8 @@
         qualification: "",
         moderationComment: "",
         secretQuestion: "Ваш любимый город?",
-        secretAnswer: "бишкек"
+        secretAnswer: "бишкек",
+        whatsapp: "996700123456"
     }, {
         id: 3,
         full_name: "Петрова Елена Викторовна",
@@ -1226,7 +1271,8 @@
         qualification: "",
         moderationComment: "",
         secretQuestion: "Ваша любимая книга?",
-        secretAnswer: "войнаимир"
+        secretAnswer: "войнаимир",
+        whatsapp: "996700123456"
     }];
 
     const ADMIN = { login: "admin", password: "admin123" };
@@ -1247,7 +1293,79 @@
     let forgotDoctorId = null;
 
     // ================================================================
-    // 2. ГЕНЕРАЦИЯ ТОКЕНА
+    // 2. ОТПРАВКА УВЕДОМЛЕНИЙ В TELEGRAM
+    // ================================================================
+    async function sendTelegramNotification(chatId, message) {
+        if (chatId === 'ЗАМЕНИТЕ_НА_CHAT_ID') {
+            console.warn('⚠️ Chat ID не настроен!');
+            return;
+        }
+        try {
+            const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            });
+            const result = await response.json();
+            if (!result.ok) {
+                console.error('Ошибка Telegram:', result);
+            }
+        } catch (err) {
+            console.error('Ошибка отправки в Telegram:', err);
+        }
+    }
+
+    async function sendBookingNotification(patientName, phone, doctorName, date, time, comment) {
+        const doctor = DOCTORS.find(d => d.full_name === doctorName);
+        const videoLink = doctor ? doctor.video : `https://meet.jit.si/Doctor_${doctorName.replace(/\s/g, '_')}`;
+
+        const message = `
+📋 <b>Новая запись на консультацию!</b>
+
+👤 Пациент: ${patientName}
+📞 Телефон: ${phone}
+👨‍⚕️ Врач: ${doctorName}
+📅 Дата: ${date || 'не выбрана'}
+🕐 Время: ${time || 'не выбрано'}
+💬 Комментарий: ${comment || 'нет'}
+
+🔗 Ссылка на видеозвонок: ${videoLink}
+        `;
+
+        for (const chatId of TELEGRAM_CHAT_IDS) {
+            await sendTelegramNotification(chatId, message);
+        }
+    }
+
+    async function sendReminderNotification(booking) {
+        const doctor = DOCTORS.find(d => d.full_name === booking.doctor);
+        const videoLink = doctor ? doctor.video : `https://meet.jit.si/Doctor_${booking.doctor.replace(/\s/g, '_')}`;
+
+        const message = `
+⏰ <b>Напоминание о консультации через 30 минут!</b>
+
+👤 Пациент: ${booking.patientName}
+📞 Телефон: ${booking.phone}
+👨‍⚕️ Врач: ${booking.doctor}
+📅 Дата: ${booking.date}
+🕐 Время: ${booking.time}
+
+🔗 Ссылка на видеозвонок: ${videoLink}
+
+Пожалуйста, подготовьтесь к консультации.
+        `;
+
+        for (const chatId of TELEGRAM_CHAT_IDS) {
+            await sendTelegramNotification(chatId, message);
+        }
+    }
+
+    // ================================================================
+    // 3. ГЕНЕРАЦИЯ ТОКЕНА
     // ================================================================
 
     function generateToken() {
@@ -1255,7 +1373,7 @@
     }
 
     // ================================================================
-    // 3. НАВИГАЦИЯ
+    // 4. НАВИГАЦИЯ
     // ================================================================
 
     function renderNav() {
@@ -1288,7 +1406,7 @@
     }
 
     // ================================================================
-    // 4. ПЕРЕКЛЮЧЕНИЕ ВИДОВ
+    // 5. ПЕРЕКЛЮЧЕНИЕ ВИДОВ
     // ================================================================
 
     function showView(view) {
@@ -1314,7 +1432,7 @@
     }
 
     // ================================================================
-    // 5. ВХОД / ВЫХОД / ВОССТАНОВЛЕНИЕ
+    // 6. ВХОД / ВЫХОД / ВОССТАНОВЛЕНИЕ
     // ================================================================
 
     function openLoginModal() {
@@ -1356,7 +1474,7 @@
     }
 
     // ================================================================
-    // 6. ВОССТАНОВЛЕНИЕ ПАРОЛЯ
+    // 7. ВОССТАНОВЛЕНИЕ ПАРОЛЯ
     // ================================================================
 
     function openForgotPassword() {
@@ -1416,7 +1534,7 @@
     }
 
     // ================================================================
-    // 7. РЕГИСТРАЦИЯ ВРАЧА (с секретным вопросом)
+    // 8. РЕГИСТРАЦИЯ ВРАЧА
     // ================================================================
 
     function renderRegisterForm() {
@@ -1601,7 +1719,8 @@
             qualification: tempQualificationBase64 || '',
             moderationComment: '',
             secretQuestion: secretQuestion,
-            secretAnswer: secretAnswer.toLowerCase()
+            secretAnswer: secretAnswer.toLowerCase(),
+            whatsapp: ''
         };
 
         DOCTORS.push(newDoctor);
@@ -1622,7 +1741,6 @@
 
         if (currentUser === 'admin') renderAdminPanel();
         searchDoctors();
-        // Очищаем временные переменные
         tempPhotoBase64 = '';
         tempDiplomaBase64 = '';
         tempCertificateBase64 = '';
@@ -1630,7 +1748,7 @@
     }
 
     // ================================================================
-    // 8. АДМИН-ПАНЕЛЬ
+    // 9. АДМИН-ПАНЕЛЬ
     // ================================================================
 
     function renderAdminPanel() {
@@ -1681,6 +1799,7 @@
                 <td>${b.patientName}</td>
                 <td>${b.phone}</td>
                 <td>${b.doctor}</td>
+                <td>${b.date || '—'}</td>
                 <td>${b.time}</td>
                 <td>
                     <span class="status-badge ${b.status === 'confirmed' ? 'green' : b.status === 'cancelled' ? 'red' : 'yellow'}">
@@ -1723,8 +1842,8 @@
 
             <h3 style="margin-top:24px;">📋 Заявки</h3>
             <table class="admin-table">
-                <thead><tr><th>Пациент</th><th>Телефон</th><th>Врач</th><th>Время</th><th>Статус</th><th>Действия</th></tr></thead>
-                <tbody>${bookingsHtml || '<tr><td colspan="6">Нет заявок</td></tr>'}</tbody>
+                <thead><tr><th>Пациент</th><th>Телефон</th><th>Врач</th><th>Дата</th><th>Время</th><th>Статус</th><th>Действия</th></tr></thead>
+                <tbody>${bookingsHtml || '<tr><td colspan="7">Нет заявок</td></tr>'}</tbody>
             </table>
         `;
     }
@@ -1748,7 +1867,7 @@
     }
 
     // ================================================================
-    // 9. МОДЕРАЦИЯ
+    // 10. МОДЕРАЦИЯ
     // ================================================================
 
     function openModeration(id) {
@@ -1846,7 +1965,7 @@
     }
 
     // ================================================================
-    // 10. ОСТАЛЬНЫЕ ФУНКЦИИ (АДМИН, КАБИНЕТ, ПОИСК)
+    // 11. ОСТАЛЬНЫЕ ФУНКЦИИ (АДМИН, КАБИНЕТ, ПОИСК)
     // ================================================================
 
     function toggleVerify(id) {
@@ -1904,7 +2023,8 @@
             qualification: '',
             moderationComment: '',
             secretQuestion: secretQ,
-            secretAnswer: secretA.toLowerCase()
+            secretAnswer: secretA.toLowerCase(),
+            whatsapp: ''
         });
         renderAdminPanel();
         searchDoctors();
@@ -1921,7 +2041,7 @@
     }
 
     // ================================================================
-    // 11. ПОИСК И ОТРИСОВКА (ПУБЛИЧНАЯ ЧАСТЬ)
+    // 12. ПОИСК И ОТРИСОВКА (ПУБЛИЧНАЯ ЧАСТЬ)
     // ================================================================
 
     function searchDoctors() {
@@ -1964,6 +2084,12 @@
             const slotsHtml = doc.schedule.map(time =>
                 `<div class="slot" onclick="openBooking('${doc.full_name}', '${time}')">🕐 ${time}</div>`
             ).join('');
+
+            // Кнопка WhatsApp для врача
+            const whatsappLink = doc.whatsapp ?
+                `https://wa.me/${doc.whatsapp}?text=Здравствуйте! Я хочу записаться к вам на консультацию.` :
+                `https://wa.me/${WHATSAPP_PHONE}?text=Здравствуйте! Я хочу записаться к врачу ${doc.full_name}.`;
+
             return `
                 <div class="doctor-card">
                     <div class="avatar">${avatarHtml}</div>
@@ -1978,8 +2104,9 @@
                         <p style="font-size:13px; color:#5a6f88; margin-bottom:8px; font-weight:600;">📅 Доступное время:</p>
                         <div style="display:flex; flex-wrap:wrap; gap:8px;">${slotsHtml}</div>
                     </div>
-                    <div style="margin-top:14px;">
+                    <div class="booking-buttons">
                         <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">💬 Записаться</button>
+                        <a href="${whatsappLink}" target="_blank" class="btn-whatsapp">💬 Написать в WhatsApp</a>
                     </div>
                     ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
                 </div>
@@ -1988,7 +2115,7 @@
     }
 
     // ================================================================
-    // 12. ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
+    // 13. ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
     // ================================================================
 
     let selectedDoctor = '';
@@ -2021,35 +2148,77 @@
         const phone = document.getElementById('patientPhone').value.trim();
         const email = document.getElementById('patientEmail').value.trim();
         const comment = document.getElementById('patientComment').value.trim();
+
         if (!name || !phone) {
             document.getElementById('formError').textContent = 'Пожалуйста, заполните имя и телефон';
             document.getElementById('formError').classList.add('active');
             return;
         }
+
         document.getElementById('formError').classList.remove('active');
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('submitBtn').textContent = '⏳ Отправка...';
-        bookings.push({
+
+        // Определяем дату и время
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = selectedTime || 'не выбрано';
+
+        const booking = {
             id: Date.now(),
             patientName: name,
             phone,
             email,
             comment,
             doctor: selectedDoctor,
-            time: selectedTime,
+            date: dateStr,
+            time: timeStr,
             status: 'pending',
             createdAt: new Date().toLocaleString()
-        });
+        };
+
+        bookings.push(booking);
+
+        // Отправляем уведомление о записи
+        sendBookingNotification(name, phone, selectedDoctor, dateStr, timeStr, comment);
+
+        // Планируем напоминание за 30 минут до консультации (если время указано)
+        if (timeStr && timeStr !== 'не выбрано') {
+            // Парсим время (например, "10:00" -> 10 часов 0 минут)
+            const timeParts = timeStr.split(':');
+            const hours = parseInt(timeParts[0]);
+            const minutes = parseInt(timeParts[1]) || 0;
+
+            // Создаём дату и время консультации на сегодня
+            const consultTime = new Date();
+            consultTime.setHours(hours, minutes, 0, 0);
+
+            // Вычисляем время напоминания (за 30 минут до консультации)
+            const reminderTime = new Date(consultTime.getTime() - 30 * 60 * 1000);
+            const now = new Date();
+
+            if (reminderTime > now) {
+                const delay = reminderTime.getTime() - now.getTime();
+                setTimeout(() => {
+                    sendReminderNotification(booking);
+                }, delay);
+                console.log(`⏰ Напоминание запланировано на ${reminderTime.toLocaleTimeString()}`);
+            } else {
+                console.log('⚠️ Время консультации уже прошло, напоминание не отправлено');
+            }
+        }
+
         document.getElementById('formContainer').style.display = 'none';
         document.getElementById('formSuccess').classList.add('active');
         document.getElementById('submitBtn').disabled = false;
         document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
+
         if (currentUser === 'admin') renderAdminPanel();
         if (currentUser && currentUser.login) renderDoctorCabinet();
     }
 
     // ================================================================
-    // 13. КАБИНЕТ ВРАЧА
+    // 14. КАБИНЕТ ВРАЧА
     // ================================================================
 
     function renderDoctorCabinet() {
@@ -2218,7 +2387,7 @@
                         ${bookings.filter(b => b.doctor === doc.full_name).map(b => `
                             <li>
                                 <span class="patient-name">${b.patientName}</span>
-                                <span class="patient-time">${b.time} (${b.status === 'pending' ? '⏳ ожидает' : '✅ подтверждена'})</span>
+                                <span class="patient-time">${b.date || '—'} ${b.time} (${b.status === 'pending' ? '⏳ ожидает' : '✅ подтверждена'})</span>
                             </li>
                         `).join('') || '<li style="color:#7a8fa5;">Пока нет записей</li>'}
                     </ul>
@@ -2233,7 +2402,7 @@
     }
 
     // ================================================================
-    // 14. ФУНКЦИИ РЕДАКТИРОВАНИЯ И РАСПИСАНИЯ
+    // 15. ФУНКЦИИ РЕДАКТИРОВАНИЯ И РАСПИСАНИЯ
     // ================================================================
 
     function startEdit() {
@@ -2384,7 +2553,7 @@
     }
 
     // ================================================================
-    // 15. ЗАПУСК
+    // 16. ЗАПУСК
     // ================================================================
 
     function handleRegisterLink() {
