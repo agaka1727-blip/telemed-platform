@@ -578,10 +578,16 @@
             cursor: pointer;
             transition: 0.2s;
             font-family: inherit;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
         .admin-add-btn:hover {
             background: #1558b0;
+        }
+        .admin-add-btn.import {
+            background: #0b2b4a;
+        }
+        .admin-add-btn.import:hover {
+            background: #1a3d5e;
         }
         .doctor-cabinet {
             background: white;
@@ -825,6 +831,21 @@
             font-family: monospace;
             font-size: 13px;
         }
+        .import-result {
+            background: #f0f7ff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            border-left: 4px solid #1a73e8;
+        }
+        .import-result .success {
+            color: #1e7e34;
+            font-weight: 600;
+        }
+        .import-result .error {
+            color: #d93025;
+            font-weight: 600;
+        }
         @media (max-width: 768px) {
             .doctor-cabinet .cabinet-grid {
                 grid-template-columns: 1fr;
@@ -935,4 +956,969 @@
             <div class="form-error" id="loginError">Неверный логин или пароль</div>
             <button type="submit" class="btn-submit">Войти</button>
         </form>
-    </div
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО (ИМПОРТ ИЗ GOOGLE ТАБЛИЦЫ) ===== -->
+<div class="modal" id="importModal">
+    <div class="modal-content import-modal">
+        <button class="close" onclick="closeImportModal()">✕</button>
+        <h2>📥 Импорт из Google Таблицы</h2>
+        <p class="sub">Вставьте ссылку на таблицу с ответами Google Формы</p>
+        <form id="importForm" onsubmit="importFromGoogle(event)">
+            <div class="form-group">
+                <label>Ссылка на Google Таблицу</label>
+                <textarea id="importSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../edit" required></textarea>
+            </div>
+            <div id="importStatus"></div>
+            <button type="submit" class="btn-submit" id="importBtn">📥 Импортировать</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ================================================================
+    // 1. ДАННЫЕ
+    // ================================================================
+
+    let DOCTORS = [{
+        id: 1,
+        full_name: "Иванов Сергей Петрович",
+        specialization: "Врач-уролог",
+        symptoms: ["цистит", "простатит", "мочекаменная болезнь"],
+        experience: 22,
+        price: 3500,
+        verified: true,
+        bio: "Врач-уролог высшей категории. Стаж 22 года.",
+        video: "https://meet.jit.si/Urolog_Ivanov",
+        schedule: ["10:00", "11:00", "12:00", "14:00", "15:00"],
+        login: "ivanov",
+        password: "doc123",
+        photo: ""
+    }, {
+        id: 2,
+        full_name: "Сариева Алия",
+        specialization: "Юрист (медицинское право)",
+        symptoms: ["юридические консультации", "медицинские споры"],
+        experience: 18,
+        price: 5000,
+        verified: true,
+        bio: "Юрист с 18-летним стажем. Специализируюсь на медицинском праве.",
+        video: "https://meet.jit.si/SarievaAlia",
+        schedule: ["09:00", "10:00", "11:00", "13:00", "14:00"],
+        login: "sarieva",
+        password: "doc123",
+        photo: ""
+    }, {
+        id: 3,
+        full_name: "Петрова Елена Викторовна",
+        specialization: "Терапевт",
+        symptoms: ["кашель", "температура", "боль в горле", "грипп"],
+        experience: 15,
+        price: 2500,
+        verified: false,
+        bio: "Терапевт с 15-летним стажем. Диагностика и лечение простудных заболеваний.",
+        video: "https://meet.jit.si/Therapist_Petrova",
+        schedule: ["08:00", "09:00", "10:00", "11:00", "12:00"],
+        login: "petrova",
+        password: "doc123",
+        photo: ""
+    }];
+
+    const ADMIN = { login: "admin", password: "admin123" };
+    let bookings = [];
+    let currentUser = null;
+    let currentFilter = 'all';
+    let editingDoctorId = null;
+    let inviteToken = null;
+    let tempPhotoBase64 = '';
+
+    // ================================================================
+    // 2. ГЕНЕРАЦИЯ ТОКЕНА
+    // ================================================================
+
+    function generateToken() {
+        return 'invite_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    }
+
+    // ================================================================
+    // 3. НАВИГАЦИЯ
+    // ================================================================
+
+    function renderNav() {
+        const nav = document.getElementById('navLinks');
+        let html = '';
+        if (currentUser === 'admin') {
+            html = `
+                <span class="user-badge">👩‍💼 Админ</span>
+                <button class="btn-admin" onclick="showView('admin')">📊 Панель</button>
+                <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
+            `;
+        } else if (currentUser && currentUser.login) {
+            html = `
+                <span class="user-badge">👨‍⚕️ ${currentUser.full_name}</span>
+                <button class="btn-admin" onclick="showView('doctor')">📋 Кабинет</button>
+                <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
+            `;
+        } else {
+            html = `<button class="btn-login" onclick="openLoginModal()">🔐 Вход</button>`;
+        }
+        nav.innerHTML = html;
+    }
+
+    // ================================================================
+    // 4. ПЕРЕКЛЮЧЕНИЕ ВИДОВ
+    // ================================================================
+
+    function showView(view) {
+        document.getElementById('publicView').classList.add('hidden');
+        document.getElementById('adminView').classList.add('hidden');
+        document.getElementById('doctorView').classList.add('hidden');
+        document.getElementById('registerView').classList.add('hidden');
+
+        if (view === 'public') {
+            document.getElementById('publicView').classList.remove('hidden');
+            searchDoctors();
+        } else if (view === 'admin' && currentUser === 'admin') {
+            document.getElementById('adminView').classList.remove('hidden');
+            renderAdminPanel();
+        } else if (view === 'doctor' && currentUser && currentUser.login) {
+            document.getElementById('doctorView').classList.remove('hidden');
+            renderDoctorCabinet();
+        } else if (view === 'register') {
+            document.getElementById('registerView').classList.remove('hidden');
+            renderRegisterForm();
+        }
+        renderNav();
+    }
+
+    // ================================================================
+    // 5. ВХОД / ВЫХОД
+    // ================================================================
+
+    function openLoginModal() {
+        document.getElementById('loginModal').classList.add('active');
+        document.getElementById('loginError').classList.remove('active');
+        document.getElementById('loginForm').reset();
+    }
+
+    function closeLoginModal() {
+        document.getElementById('loginModal').classList.remove('active');
+    }
+
+    function login(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+
+        if (username === ADMIN.login && password === ADMIN.password) {
+            currentUser = 'admin';
+            closeLoginModal();
+            showView('admin');
+            return;
+        }
+        const doctor = DOCTORS.find(d => d.login === username && d.password === password);
+        if (doctor) {
+            currentUser = doctor;
+            closeLoginModal();
+            showView('doctor');
+            return;
+        }
+        document.getElementById('loginError').classList.add('active');
+    }
+
+    function logout() {
+        currentUser = null;
+        editingDoctorId = null;
+        showView('public');
+        renderNav();
+    }
+
+    // ================================================================
+    // 6. РЕГИСТРАЦИЯ ВРАЧА
+    // ================================================================
+
+    function openRegister(token) {
+        inviteToken = token;
+        showView('register');
+    }
+
+    function renderRegisterForm() {
+        const container = document.getElementById('registerContainer');
+        tempPhotoBase64 = '';
+        container.innerHTML = `
+            <h2>📝 Регистрация врача</h2>
+            <p class="sub">Заполните анкету, чтобы попасть на платформу TeleMed</p>
+            <div class="invite-badge">🔑 Приглашение: ${inviteToken || 'от администратора'}</div>
+            <form id="registerForm" onsubmit="registerDoctor(event)">
+                <div class="form-group">
+                    <label>ФИО *</label>
+                    <input type="text" id="regFullName" placeholder="Иванов Иван Иванович" required />
+                </div>
+                <div class="form-group">
+                    <label>Специализация *</label>
+                    <input type="text" id="regSpecialization" placeholder="Врач-уролог" required />
+                </div>
+                <div class="form-group">
+                    <label>Стаж (лет) *</label>
+                    <input type="number" id="regExperience" placeholder="10" required />
+                </div>
+                <div class="form-group">
+                    <label>Цена консультации (сом) *</label>
+                    <input type="number" id="regPrice" placeholder="3000" required />
+                </div>
+                <div class="form-group">
+                    <label>Краткое описание (био)</label>
+                    <textarea id="regBio" placeholder="Расскажите о себе..." rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Симптомы / заболевания (через запятую) *</label>
+                    <input type="text" id="regSymptoms" placeholder="цистит, простатит, мочекаменная болезнь" required />
+                </div>
+                <div class="form-group">
+                    <label>Фото (аватарка)</label>
+                    <input type="file" id="regPhoto" accept="image/*" onchange="previewPhoto(event)" />
+                    <div id="photoPreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>Придумайте логин *</label>
+                    <input type="text" id="regLogin" placeholder="ivanov" required />
+                </div>
+                <div class="form-group">
+                    <label>Пароль *</label>
+                    <input type="text" id="regPassword" placeholder="придумайте пароль" required />
+                </div>
+                <div class="form-error" id="regError">Пожалуйста, заполните все поля</div>
+                <button type="submit" class="btn-submit" id="regSubmitBtn">📩 Зарегистрироваться</button>
+            </form>
+            <div style="text-align:center;margin-top:16px;">
+                <a href="#" onclick="showView('public')" style="color:#1a73e8;text-decoration:none;">← На главную</a>
+            </div>
+        `;
+    }
+
+    function previewPhoto(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            tempPhotoBase64 = ev.target.result;
+            document.getElementById('photoPreview').innerHTML =
+                `<img src="${tempPhotoBase64}" class="preview-img" />`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function registerDoctor(e) {
+        e.preventDefault();
+        const fullName = document.getElementById('regFullName').value.trim();
+        const specialization = document.getElementById('regSpecialization').value.trim();
+        const experience = parseInt(document.getElementById('regExperience').value);
+        const price = parseInt(document.getElementById('regPrice').value);
+        const bio = document.getElementById('regBio').value.trim();
+        const symptomsRaw = document.getElementById('regSymptoms').value.trim();
+        const login = document.getElementById('regLogin').value.trim();
+        const password = document.getElementById('regPassword').value.trim();
+
+        if (!fullName || !specialization || !experience || !price || !symptomsRaw || !login || !password) {
+            document.getElementById('regError').textContent = 'Пожалуйста, заполните все поля';
+            document.getElementById('regError').classList.add('active');
+            return;
+        }
+
+        if (DOCTORS.some(d => d.login === login)) {
+            document.getElementById('regError').textContent = 'Этот логин уже занят, придумайте другой';
+            document.getElementById('regError').classList.add('active');
+            return;
+        }
+
+        const symptoms = symptomsRaw.split(',').map(s => s.trim()).filter(s => s);
+
+        const newDoctor = {
+            id: Date.now(),
+            full_name: fullName,
+            specialization: specialization,
+            symptoms: symptoms,
+            experience: experience,
+            price: price,
+            verified: false,
+            bio: bio || '',
+            video: `https://meet.jit.si/Doctor_${Date.now()}`,
+            schedule: ["10:00", "11:00", "12:00", "14:00", "15:00"],
+            login: login,
+            password: password,
+            photo: tempPhotoBase64 || ''
+        };
+
+        DOCTORS.push(newDoctor);
+        document.getElementById('regSubmitBtn').disabled = true;
+        document.getElementById('regSubmitBtn').textContent = '✅ Зарегистрировано!';
+
+        const container = document.getElementById('registerContainer');
+        container.innerHTML = `
+            <div style="text-align:center;padding:20px;">
+                <div style="font-size:48px;">🎉</div>
+                <h2 style="color:#1e7e34;">Регистрация завершена!</h2>
+                <p style="color:#5a6f88;margin:12px 0;">Врач ${fullName} добавлен на платформу.</p>
+                <p style="color:#5a6f88;">Данные отправлены на проверку администратору.</p>
+                <p style="color:#5a6f88;">Вы можете войти в кабинет по логину: <strong>${login}</strong></p>
+                <button class="btn-submit" style="margin-top:16px;" onclick="showView('public')">На главную</button>
+            </div>
+        `;
+
+        if (currentUser === 'admin') renderAdminPanel();
+        searchDoctors();
+    }
+
+    // ================================================================
+    // 7. ИМПОРТ ИЗ GOOGLE ТАБЛИЦЫ
+    // ================================================================
+
+    function openImportModal() {
+        document.getElementById('importModal').classList.add('active');
+        document.getElementById('importStatus').innerHTML = '';
+        document.getElementById('importSheetUrl').value = '';
+    }
+
+    function closeImportModal() {
+        document.getElementById('importModal').class.classList.remove('active');
+    }
+
+    async function importFromGoogle(e) {
+        e.preventDefault();
+        const url = document.getElementById('importSheetUrl').value.trim();
+        const status = document.getElementById('importStatus');
+        const btn = document.getElementById('importBtn');
+
+        if (!url) {
+            status.innerHTML = '<div class="import-result"><span class="error">❌ Вставьте ссылку на таблицу</span></div>';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Импорт...';
+        status.innerHTML = '<div class="import-result">⏳ Загружаем данные из Google...</div>';
+
+        try {
+            // Извлекаем ID таблицы из ссылки
+            const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (!match) {
+                status.innerHTML = '<div class="import-result"><span class="error">❌ Неверный формат ссылки</span></div>';
+                btn.disabled = false;
+                btn.textContent = '📥 Импортировать';
+                return;
+            }
+
+            const sheetId = match[1];
+            // Используем Google Sheets API через публичный JSON-экспорт
+            const apiUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Не удалось загрузить таблицу');
+
+            const text = await response.text();
+            // Парсим JSON из ответа (он обёрнут в функцию)
+            const jsonStr = text.substring(text.indexOf('(') + 1, text.lastIndexOf(')'));
+            const data = JSON.parse(jsonStr);
+
+            const rows = data.table.rows;
+            if (!rows || rows.length < 2) {
+                status.innerHTML = '<div class="import-result"><span class="error">❌ В таблице нет данных</span></div>';
+                btn.disabled = false;
+                btn.textContent = '📥 Импортировать';
+                return;
+            }
+
+            // Получаем заголовки (первая строка)
+            const headers = data.table.cols.map(col => col.label || col.id);
+            // Ищем индексы нужных колонок
+            const findCol = (name) => {
+                const idx = headers.findIndex(h => h && h.toLowerCase().includes(name.toLowerCase()));
+                return idx !== -1 ? idx : null;
+            };
+
+            const idxName = findCol('ФИО') || findCol('имя') || 0;
+            const idxSpec = findCol('специализация') || 1;
+            const idxExp = findCol('стаж') || 2;
+            const idxPrice = findCol('цена') || 3;
+            const idxBio = findCol('описание') || findCol('опыт') || 4;
+            const idxSymptoms = findCol('симптом') || 5;
+            const idxLogin = findCol('логин') || 6;
+            const idxPassword = findCol('пароль') || 7;
+            const idxPhone = findCol('телефон') || findCol('номер') || 8;
+
+            let imported = 0;
+            let errors = [];
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.c || [];
+
+                const fullName = cells[idxName] ? cells[idxName].v : '';
+                const specialization = cells[idxSpec] ? cells[idxSpec].v : '';
+                const experience = parseInt(cells[idxExp] ? cells[idxExp].v : 0) || 0;
+                const price = parseInt(cells[idxPrice] ? cells[idxPrice].v : 0) || 0;
+                const bio = cells[idxBio] ? cells[idxBio].v : '';
+                const symptomsRaw = cells[idxSymptoms] ? cells[idxSymptoms].v : '';
+                const login = cells[idxLogin] ? cells[idxLogin].v : '';
+                const password = cells[idxPassword] ? cells[idxPassword].v : '';
+                const phone = cells[idxPhone] ? cells[idxPhone].v : '';
+
+                if (!fullName || !login || !password) {
+                    errors.push(`Строка ${i}: пропущены обязательные поля (ФИО, логин или пароль)`);
+                    continue;
+                }
+
+                if (DOCTORS.some(d => d.login === login)) {
+                    errors.push(`Строка ${i}: логин "${login}" уже занят`);
+                    continue;
+                }
+
+                const symptoms = symptomsRaw ? symptomsRaw.split(',').map(s => s.trim()).filter(s => s) : [];
+
+                const newDoctor = {
+                    id: Date.now() + i,
+                    full_name: fullName,
+                    specialization: specialization || 'Не указана',
+                    symptoms: symptoms.length ? symptoms : ['не указаны'],
+                    experience: experience,
+                    price: price,
+                    verified: false,
+                    bio: bio || '',
+                    video: `https://meet.jit.si/Doctor_${Date.now()}_${i}`,
+                    schedule: ["10:00", "11:00", "12:00", "14:00", "15:00"],
+                    login: login,
+                    password: password,
+                    photo: '',
+                    phone: phone || ''
+                };
+
+                DOCTORS.push(newDoctor);
+                imported++;
+            }
+
+            let resultHtml = `<div class="import-result">`;
+            if (imported > 0) {
+                resultHtml += `<span class="success">✅ Импортировано врачей: ${imported}</span>`;
+            }
+            if (errors.length > 0) {
+                resultHtml += `<br><span style="color:#7a6500;">⚠️ Ошибки:</span>`;
+                errors.forEach(err => {
+                    resultHtml += `<br><span style="font-size:13px;color:#d93025;">• ${err}</span>`;
+                });
+            }
+            if (imported === 0 && errors.length === 0) {
+                resultHtml += `<span class="error">❌ Не удалось найти данные для импорта</span>`;
+            }
+            resultHtml += `</div>`;
+
+            status.innerHTML = resultHtml;
+
+            if (imported > 0) {
+                renderAdminPanel();
+                searchDoctors();
+                // Показываем уведомление
+                alert(`✅ Импортировано ${imported} врачей!`);
+            }
+
+        } catch (err) {
+            status.innerHTML = `<div class="import-result"><span class="error">❌ Ошибка импорта: ${err.message}</span></div>`;
+            console.error(err);
+        }
+
+        btn.disabled = false;
+        btn.textContent = '📥 Импортировать';
+    }
+
+    // ================================================================
+    // 8. АДМИН-ПАНЕЛЬ
+    // ================================================================
+
+    function renderAdminPanel() {
+        const panel = document.getElementById('adminPanel');
+        const totalDoctors = DOCTORS.length;
+        const verifiedDoctors = DOCTORS.filter(d => d.verified).length;
+        const totalBookings = bookings.length;
+        const pendingBookings = bookings.filter(b => b.status === 'pending').length;
+
+        let doctorsHtml = DOCTORS.map(d => `
+            <tr>
+                <td>${d.full_name}</td>
+                <td>${d.specialization}</td>
+                <td>${d.experience} лет</td>
+                <td>${d.price} сом</td>
+                <td>${d.login}</td>
+                <td>
+                    <span class="status-badge ${d.verified ? 'green' : 'yellow'}">
+                        ${d.verified ? '✅ Проверен' : '⏳ Ожидает'}
+                    </span>
+                </td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn-verify" onclick="toggleVerify(${d.id})">
+                            ${d.verified ? '❌ Снять' : '✅ Подтвердить'}
+                        </button>
+                        <button class="btn-delete" onclick="deleteDoctor(${d.id})">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        let bookingsHtml = bookings.map(b => `
+            <tr>
+                <td>${b.patientName}</td>
+                <td>${b.phone}</td>
+                <td>${b.doctor}</td>
+                <td>${b.time}</td>
+                <td>
+                    <span class="status-badge ${b.status === 'confirmed' ? 'green' : b.status === 'cancelled' ? 'red' : 'yellow'}">
+                        ${b.status === 'pending' ? '⏳ Ожидает' : b.status === 'confirmed' ? '✅ Подтверждена' : '❌ Отменена'}
+                    </span>
+                </td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn-edit" onclick="updateBooking(${b.id}, 'confirmed')">✅</button>
+                        <button class="btn-delete" onclick="updateBooking(${b.id}, 'cancelled')">❌</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        panel.innerHTML = `
+            <h2>📊 Панель управления</h2>
+            <div class="admin-stats">
+                <div class="stat"><div class="number">${totalDoctors}</div><div class="label">Всего врачей</div></div>
+                <div class="stat"><div class="number">${verifiedDoctors}</div><div class="label">Проверенных</div></div>
+                <div class="stat"><div class="number">${totalBookings}</div><div class="label">Всего заявок</div></div>
+                <div class="stat"><div class="number">${pendingBookings}</div><div class="label">Ожидают</div></div>
+            </div>
+            <h3 style="margin-top:24px;">👨‍⚕️ Врачи</h3>
+            <button class="admin-add-btn" onclick="inviteDoctor()">📨 Пригласить врача</button>
+            <button class="admin-add-btn" style="background:#eef3f9;color:#0b2b4a;" onclick="addDoctor()">➕ Добавить вручную</button>
+            <button class="admin-add-btn import" onclick="openImportModal()">📥 Импорт из Google Таблицы</button>
+            <table class="admin-table">
+                <thead><tr><th>ФИО</th><th>Специализация</th><th>Стаж</th><th>Цена</th><th>Логин</th><th>Статус</th><th>Действия</th></tr></thead>
+                <tbody>${doctorsHtml}</tbody>
+            </table>
+            <h3 style="margin-top:24px;">📋 Заявки</h3>
+            <table class="admin-table">
+                <thead><tr><th>Пациент</th><th>Телефон</th><th>Врач</th><th>Время</th><th>Статус</th><th>Действия</th></tr></thead>
+                <tbody>${bookingsHtml || '<tr><td colspan="6">Нет заявок</td></tr>'}</tbody>
+            </table>
+        `;
+    }
+
+    // ================================================================
+    // 9. ПРИГЛАШЕНИЕ ВРАЧА
+    // ================================================================
+
+    function inviteDoctor() {
+        const token = generateToken();
+        const inviteLink = `https://telemed.kg/?register=${token}`;
+        const input = document.createElement('input');
+        input.value = inviteLink;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        alert('✅ Ссылка-приглашение скопирована! Отправьте её врачу.\n\n' + inviteLink);
+        openRegister(token);
+    }
+
+    // ================================================================
+    // 10. АДМИН-ДЕЙСТВИЯ
+    // ================================================================
+
+    function toggleVerify(id) {
+        const doctor = DOCTORS.find(d => d.id === id);
+        if (doctor) { doctor.verified = !doctor.verified;
+            renderAdminPanel();
+            searchDoctors(); }
+    }
+
+    function deleteDoctor(id) {
+        if (confirm('Удалить врача?')) {
+            const index = DOCTORS.findIndex(d => d.id === id);
+            if (index !== -1) { DOCTORS.splice(index, 1);
+                renderAdminPanel();
+                searchDoctors(); }
+        }
+    }
+
+    function addDoctor() {
+        const name = prompt('Введите ФИО врача:');
+        if (!name) return;
+        const spec = prompt('Введите специализацию:');
+        if (!spec) return;
+        const price = parseInt(prompt('Введите цену (сом):')) || 3000;
+        const exp = parseInt(prompt('Введите стаж (лет):')) || 10;
+        const login = prompt('Введите логин:') || name.toLowerCase().replace(/\s/g, '');
+        const password = prompt('Введите пароль:') || 'doc123';
+        DOCTORS.push({
+            id: Date.now(),
+            full_name: name,
+            specialization: spec,
+            symptoms: ['введите симптомы'],
+            experience: exp,
+            price: price,
+            verified: false,
+            bio: '',
+            video: `https://meet.jit.si/Doctor_${Date.now()}`,
+            schedule: ['10:00', '11:00', '12:00'],
+            login: login,
+            password: password,
+            photo: ''
+        });
+        renderAdminPanel();
+        searchDoctors();
+        alert(`✅ Врач добавлен!\nЛогин: ${login}\nПароль: ${password}`);
+    }
+
+    function updateBooking(id, status) {
+        const booking = bookings.find(b => b.id === id);
+        if (booking) { booking.status = status;
+            renderAdminPanel(); if (currentUser && currentUser.login) renderDoctorCabinet(); }
+    }
+
+    // ================================================================
+    // 11. КАБИНЕТ ВРАЧА
+    // ================================================================
+
+    function renderDoctorCabinet() {
+        if (!currentUser || !currentUser.login) return;
+        const doc = currentUser;
+        const cabinet = document.getElementById('doctorCabinet');
+
+        const myBookings = bookings.filter(b => b.doctor === doc.full_name);
+        let patientsHtml = myBookings.map(b => `
+            <li>
+                <span class="patient-name">${b.patientName}</span>
+                <span class="patient-time">${b.time} (${b.status === 'pending' ? '⏳ ожидает' : '✅ подтверждена'})</span>
+            </li>
+        `).join('') || '<li style="color:#7a8fa5;">Пока нет записей</li>';
+
+        const isEditing = editingDoctorId === doc.id;
+
+        const avatarHtml = doc.photo ?
+            `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;" />` :
+            `<div style="width:70px;height:70px;border-radius:50%;background:#dce4ed;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#1a3d5e;">${doc.full_name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()}</div>`;
+
+        cabinet.innerHTML = `
+            <div class="cabinet-header">
+                <div>
+                    ${avatarHtml}
+                    <h2>👨‍⚕️ ${doc.full_name}</h2>
+                    <p style="color:#5a6f88;">${doc.specialization} · Стаж ${doc.experience} лет</p>
+                </div>
+                <span class="status ${doc.verified ? 'verified' : 'pending'}">
+                    ${doc.verified ? '✅ Документы проверены' : '⏳ Ожидает проверки'}
+                </span>
+            </div>
+
+            <div class="login-info">
+                <strong>🔑 Ваши данные для входа:</strong><br />
+                Логин: <strong>${doc.login}</strong> &nbsp;|&nbsp; Пароль: <strong>${doc.password}</strong>
+                <button class="copy-btn" onclick="copyLoginInfo('${doc.login}', '${doc.password}')">📋 Скопировать</button>
+                <span style="font-size:13px;color:#5a6f88;display:block;margin-top:4px;">
+                    ${isEditing ? '' : '<button class="edit-btn" onclick="startEdit()">✏️ Изменить пароль</button>'}
+                </span>
+            </div>
+
+            ${isEditing ? `
+                <div style="background:#f0f7ff;border-radius:16px;padding:16px;margin-bottom:16px;border:2px solid #1a73e8;">
+                    <h4 style="margin-bottom:12px;">✏️ Редактирование профиля</h4>
+                    <div class="form-group">
+                        <label>Цена (сом)</label>
+                        <input type="number" id="editPrice" value="${doc.price}" />
+                    </div>
+                    <div class="form-group">
+                        <label>Описание (био)</label>
+                        <textarea id="editBio" rows="3">${doc.bio || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Новый пароль</label>
+                        <input type="text" id="editPassword" placeholder="Оставьте пустым, чтобы не менять" />
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button class="save-btn" onclick="saveDoctorProfile()">💾 Сохранить</button>
+                        <button class="cancel-btn" onclick="cancelEdit()">Отмена</button>
+                    </div>
+                </div>
+            ` : ''}
+
+            <div class="cabinet-grid">
+                <div class="card">
+                    <h4>📋 Моя карточка</h4>
+                    <div class="info-item"><span class="label">ФИО</span><span class="value">${doc.full_name}</span></div>
+                    <div class="info-item"><span class="label">Специализация</span><span class="value">${doc.specialization}</span></div>
+                    <div class="info-item"><span class="label">Стаж</span><span class="value">${doc.experience} лет</span></div>
+                    <div class="info-item"><span class="label">Цена</span><span class="value">${doc.price} сом</span></div>
+                    <div class="info-item"><span class="label">Статус</span><span class="value">${doc.verified ? '✅ Проверен' : '⏳ Ожидает'}</span></div>
+                    ${!isEditing ? `<button class="edit-btn" onclick="startEdit()">✏️ Редактировать профиль</button>` : ''}
+                </div>
+
+                <div class="card">
+                    <h4>📅 Моё расписание</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                        ${doc.schedule.map(t => `<span class="slot" style="background:#eef3f9;color:#0b2b4a;cursor:default;">🕐 ${t}</span>`).join('')}
+                    </div>
+                    <div class="add-slot-form">
+                        <input type="text" id="newSlot" placeholder="HH:MM" />
+                        <button onclick="addSlot()">➕ Добавить время</button>
+                    </div>
+                    <p style="font-size:12px;color:#7a8fa5;margin-top:4px;">Введите время в формате HH:MM (например, 16:00)</p>
+                    ${doc.schedule.length > 0 ? `<button class="edit-btn" style="margin-top:8px;background:#d93025;" onclick="removeLastSlot()">🗑️ Удалить последний слот</button>` : ''}
+                </div>
+
+                <div class="card">
+                    <h4>📹 Видеозвонок</h4>
+                    <p style="font-size:14px;color:#5a6f88;margin-bottom:8px;">Ваша персональная комната для приёма пациентов:</p>
+                    <a href="${doc.video}" target="_blank" class="video-link">🎥 Открыть видеозвонок</a>
+                    <p style="font-size:12px;color:#7a8fa5;margin-top:6px;">Скопируйте эту ссылку и отправьте пациенту после подтверждения записи</p>
+                    <div style="background:#f8fafc;padding:8px 12px;border-radius:12px;font-size:13px;color:#0b2b4a;word-break:break-all;margin-top:8px;">${doc.video}</div>
+                </div>
+
+                <div class="card">
+                    <h4>📋 Мои пациенты (${myBookings.length})</h4>
+                    <ul class="patient-list">${patientsHtml}</ul>
+                </div>
+            </div>
+
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eef3f9;display:flex;gap:12px;flex-wrap:wrap;">
+                <a href="https://telemed.kg" target="_blank" class="btn-chat" style="background:#eef3f9;color:#0b2b4a;">👁️ Посмотреть свой профиль</a>
+                <button onclick="logout()" class="btn-danger">🚪 Выйти</button>
+            </div>
+        `;
+    }
+
+    // ================================================================
+    // 12. ДЕЙСТВИЯ В КАБИНЕТЕ
+    // ================================================================
+
+    function startEdit() {
+        if (currentUser && currentUser.login) {
+            editingDoctorId = currentUser.id;
+            renderDoctorCabinet();
+        }
+    }
+
+    function cancelEdit() {
+        editingDoctorId = null;
+        renderDoctorCabinet();
+    }
+
+    function saveDoctorProfile() {
+        if (!currentUser || !currentUser.login) return;
+        const doc = DOCTORS.find(d => d.id === currentUser.id);
+        if (!doc) return;
+        const newPrice = parseInt(document.getElementById('editPrice').value);
+        const newBio = document.getElementById('editBio').value;
+        const newPassword = document.getElementById('editPassword').value.trim();
+        if (newPrice) doc.price = newPrice;
+        doc.bio = newBio;
+        if (newPassword) doc.password = newPassword;
+        currentUser = doc;
+        editingDoctorId = null;
+        renderDoctorCabinet();
+        searchDoctors();
+        alert('✅ Профиль обновлён!');
+    }
+
+    function addSlot() {
+        if (!currentUser || !currentUser.login) return;
+        const input = document.getElementById('newSlot');
+        const time = input.value.trim();
+        if (!time) return alert('Введите время');
+        const doc = DOCTORS.find(d => d.id === currentUser.id);
+        if (!doc) return;
+        if (doc.schedule.includes(time)) return alert('Такое время уже есть');
+        doc.schedule.push(time);
+        doc.schedule.sort();
+        currentUser = doc;
+        input.value = '';
+        renderDoctorCabinet();
+        searchDoctors();
+    }
+
+    function removeLastSlot() {
+        if (!currentUser || !currentUser.login) return;
+        const doc = DOCTORS.find(d => d.id === currentUser.id);
+        if (!doc || doc.schedule.length === 0) return;
+        doc.schedule.pop();
+        currentUser = doc;
+        renderDoctorCabinet();
+        searchDoctors();
+    }
+
+    function copyLoginInfo(login, password) {
+        const text = `Логин: ${login}\nПароль: ${password}`;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('✅ Данные для входа скопированы!');
+        }).catch(() => {
+            prompt('Скопируйте вручную:', text);
+        });
+    }
+
+    // ================================================================
+    // 13. ПОИСК И ОТРИСОВКА
+    // ================================================================
+
+    function searchDoctors() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const container = document.getElementById('doctorsContainer');
+        let results = DOCTORS;
+        if (currentFilter === 'verified') results = results.filter(d => d.verified);
+        if (query) {
+            results = results.filter(d => {
+                const fullName = d.full_name.toLowerCase();
+                const spec = d.specialization.toLowerCase();
+                const symptoms = d.symptoms.map(s => s.toLowerCase()).join(' ');
+                return fullName.includes(query) || spec.includes(query) || symptoms.includes(query);
+            });
+        }
+        results.sort((a, b) => (a.verified === b.verified) ? 0 : a.verified ? -1 : 1);
+        renderDoctors(results);
+    }
+
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('#filterBar button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        searchDoctors();
+    }
+
+    function renderDoctors(doctors) {
+        const container = document.getElementById('doctorsContainer');
+        if (!doctors.length) {
+            container.innerHTML = '<div class="no-results">👀 Врачей не найдено</div>';
+            return;
+        }
+        container.innerHTML = doctors.map(doc => {
+            const avatarHtml = doc.photo ?
+                `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;" />` :
+                doc.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            const symptomsHtml = doc.symptoms.map(s => `<span>${s}</span>`).join(' ');
+            const verifiedBadge = doc.verified ? '<span class="verified-badge">✅ Проверен</span>' : '';
+            const slotsHtml = doc.schedule.map(time =>
+                `<div class="slot" onclick="openBooking('${doc.full_name}', '${time}')">🕐 ${time}</div>`
+            ).join('');
+            return `
+                <div class="doctor-card">
+                    <div class="avatar">${avatarHtml}</div>
+                    <h3>${doc.full_name} ${verifiedBadge}</h3>
+                    <div class="specialization">${doc.specialization}</div>
+                    <div class="symptoms">${symptomsHtml}</div>
+                    <div class="info-row">
+                        <span class="price">${doc.price} <small>сом</small></span>
+                        <span>Стаж ${doc.experience} лет</span>
+                    </div>
+                    <div style="margin-top:14px; border-top:1px solid #eef3f9; padding-top:12px;">
+                        <p style="font-size:13px; color:#5a6f88; margin-bottom:8px; font-weight:600;">📅 Доступное время:</p>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;">${slotsHtml}</div>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">💬 Записаться</button>
+                    </div>
+                    ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ================================================================
+    // 14. ЗАПИСЬ
+    // ================================================================
+
+    let selectedDoctor = '';
+    let selectedTime = '';
+
+    function openBooking(doctorName, time) {
+        selectedDoctor = doctorName;
+        selectedTime = time || 'не выбрано';
+        document.getElementById('modalDoctorInfo').textContent = `Врач: ${doctorName}`;
+        document.getElementById('modalTimeInfo').textContent = `Время: ${time || 'не выбрано'}`;
+        document.getElementById('bookingForm').reset();
+        document.getElementById('formContainer').style.display = 'block';
+        document.getElementById('formSuccess').classList.remove('active');
+        document.getElementById('formError').classList.remove('active');
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
+        document.getElementById('bookingModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('bookingModal').classList.remove('active');
+    }
+    document.getElementById('bookingModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    function submitForm(e) {
+        e.preventDefault();
+        const name = document.getElementById('patientName').value.trim();
+        const phone = document.getElementById('patientPhone').value.trim();
+        const email = document.getElementById('patientEmail').value.trim();
+        const comment = document.getElementById('patientComment').value.trim();
+        if (!name || !phone) {
+            document.getElementById('formError').textContent = 'Пожалуйста, заполните имя и телефон';
+            document.getElementById('formError').classList.add('active');
+            return;
+        }
+        document.getElementById('formError').classList.remove('active');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').textContent = '⏳ Отправка...';
+        bookings.push({
+            id: Date.now(),
+            patientName: name,
+            phone,
+            email,
+            comment,
+            doctor: selectedDoctor,
+            time: selectedTime,
+            status: 'pending',
+            createdAt: new Date().toLocaleString()
+        });
+        document.getElementById('formContainer').style.display = 'none';
+        document.getElementById('formSuccess').classList.add('active');
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
+        if (currentUser === 'admin') renderAdminPanel();
+        if (currentUser && currentUser.login) renderDoctorCabinet();
+    }
+
+    // ================================================================
+    // 15. ОБРАБОТКА ССЫЛКИ-ПРИГЛАШЕНИЯ
+    // ================================================================
+
+    function handleRegisterLink() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('register');
+        if (token) {
+            openRegister(token);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
+    // ================================================================
+    // 16. ЗАПУСК
+    // ================================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderNav();
+        handleRegisterLink();
+        showView('public');
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') searchDoctors();
+        });
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) closeLoginModal();
+        });
+        document.getElementById('importModal').addEventListener('click', function(e) {
+            if (e.target === this) closeImportModal();
+        });
+    });
+</script>
+
+</body>
+</html>
