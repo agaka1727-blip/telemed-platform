@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Поиск врачей — Телемедицина</title>
+    <title>Поиск врачей — TeleMed</title>
     <style>
+        /* ===== ОБЩИЕ СТИЛИ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -71,7 +72,7 @@
         }
         .doctors-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 24px;
         }
         .doctor-card {
@@ -79,8 +80,8 @@
             border-radius: 20px;
             padding: 24px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-            transition: 0.2s;
             border: 1px solid #e8edf3;
+            transition: 0.2s;
         }
         .doctor-card:hover {
             transform: translateY(-4px);
@@ -168,6 +169,48 @@
         .btn-call:hover {
             background: #146128;
         }
+        .btn-chat {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-chat:hover {
+            background: #1558b0;
+        }
+        /* Слоты времени */
+        .slot {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #1a73e8;
+            color: white;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+            border: none;
+        }
+        .slot:hover {
+            background: #1558b0;
+            transform: scale(1.02);
+        }
+        .slot.booked {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .slot.booked:hover {
+            transform: none;
+            background: #ccc;
+        }
         .loading {
             text-align: center;
             color: #7a8fa5;
@@ -179,12 +222,6 @@
             color: #7a8fa5;
             padding: 40px 0;
             font-size: 18px;
-        }
-        .admin-note {
-            text-align: center;
-            margin-top: 40px;
-            font-size: 13px;
-            color: #9aafc4;
         }
         .filter-bar {
             display: flex;
@@ -209,8 +246,11 @@
             color: white;
             border-color: #1a73e8;
         }
-        .filter-bar button:hover:not(.active) {
-            border-color: #1a73e8;
+        .admin-note {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #9aafc4;
         }
     </style>
 </head>
@@ -223,7 +263,7 @@
     </div>
 
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Например: кардиолог, головная боль, Иванова..." />
+        <input type="text" id="searchInput" placeholder="Например: уролог, цистит, Иванов..." />
         <button onclick="searchDoctors()">Найти</button>
     </div>
 
@@ -237,40 +277,40 @@
     </div>
 
     <div class="admin-note">
-        🔐 Администратор: редактируйте список врачей в файле doctorsData.js
+        🔐 Администратор: редактируйте список врачей в коде ниже (массив DOCTORS)
     </div>
 </div>
 
 <script>
     // ============================================================
-    // 1. БАЗА ДАННЫХ ВРАЧЕЙ (ХРАНИТСЯ ПРЯМО В КОДЕ)
-    //    Добавляйте врачей сюда, и они появятся на сайте!
+    // 1. БАЗА ДАННЫХ ВРАЧЕЙ (ДОБАВЛЯЙТЕ ВРАЧЕЙ СЮДА!)
+    //    Чтобы добавить нового врача, скопируйте { ... } и вставьте
+    //    через запятую в массив DOCTORS
     // ============================================================
     const DOCTORS = [
         {
-            id: 1,
-            full_name: "Сариева Алия",
-            specialization: "Юрист (медицинское право)",
-            symptoms: ["юридические консультации", "медицинские споры", "трудовые споры"],
-            experience: 18,
-            price: 5000,
-            verified: true,
-            bio: "Юрист с 18-летним стажем. Специализируюсь на медицинском праве.",
-            video_room: "https://meet.jit.si/SarievaAlia"
-        },
-        {
-            id: 2,
             full_name: "Иванов Сергей Петрович",
             specialization: "Врач-уролог",
-            symptoms: ["цистит", "пиелонефрит", "простатит", "мочекаменная болезнь"],
+            symptoms: ["цистит", "простатит", "мочекаменная болезнь"],
             experience: 22,
             price: 3500,
             verified: true,
             bio: "Врач-уролог высшей категории. Стаж 22 года.",
-            video_room: "https://meet.jit.si/Urolog_Ivanov"
+            video: "https://meet.jit.si/Urolog_Ivanov",
+            schedule: ["10:00", "11:00", "12:00", "14:00", "15:00"]
         },
         {
-            id: 3,
+            full_name: "Сариева Алия",
+            specialization: "Юрист (медицинское право)",
+            symptoms: ["юридические консультации", "медицинские споры"],
+            experience: 18,
+            price: 5000,
+            verified: true,
+            bio: "Юрист с 18-летним стажем. Специализируюсь на медицинском праве.",
+            video: "https://meet.jit.si/SarievaAlia",
+            schedule: ["09:00", "10:00", "11:00", "13:00", "14:00"]
+        },
+        {
             full_name: "Петрова Елена Викторовна",
             specialization: "Терапевт",
             symptoms: ["кашель", "температура", "боль в горле", "грипп"],
@@ -278,12 +318,30 @@
             price: 2500,
             verified: false,
             bio: "Терапевт с 15-летним стажем. Диагностика и лечение простудных заболеваний.",
-            video_room: "https://meet.jit.si/Therapist_Petrova"
+            video: "https://meet.jit.si/Therapist_Petrova",
+            schedule: ["08:00", "09:00", "10:00", "11:00", "12:00"]
         }
     ];
 
     // ============================================================
-    // 2. ПОИСК И ФИЛЬТРАЦИЯ
+    // 2. ФУНКЦИЯ ЗАПИСИ НА ПРИЁМ
+    //    НОМЕР ТЕЛЕФОНА УЖЕ ВСТАВЛЕН: +996552910846
+    // ============================================================
+    function bookSlot(doctorName, time) {
+        const phone = '996552910846';  // ВАШ НОМЕР
+
+        let message = `Здравствуйте! Я хочу записаться к врачу: ${doctorName}`;
+        if (time) {
+            message += ` на ${time}`;
+        }
+        message += '. Благодарю!';
+
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    }
+
+    // ============================================================
+    // 3. ПОИСК И ФИЛЬТРАЦИЯ (НЕ ТРОГАЙТЕ)
     // ============================================================
     let currentFilter = 'all';
 
@@ -293,12 +351,10 @@
 
         let results = DOCTORS;
 
-        // Фильтр по статусу проверки
         if (currentFilter === 'verified') {
             results = results.filter(doc => doc.verified === true);
         }
 
-        // Поиск по тексту (ФИО, специализация, симптомы)
         if (query.length > 0) {
             results = results.filter(doc => {
                 const fullName = doc.full_name.toLowerCase();
@@ -308,7 +364,6 @@
             });
         }
 
-        // Сортируем: сначала проверенные
         results.sort((a, b) => (a.verified === b.verified) ? 0 : a.verified ? -1 : 1);
 
         renderDoctors(results);
@@ -323,7 +378,7 @@
     }
 
     // ============================================================
-    // 3. ОТРИСОВКА КАРТОЧЕК
+    // 4. ОТРИСОВКА КАРТОЧЕК (НЕ ТРОГАЙТЕ)
     // ============================================================
     function renderDoctors(doctors) {
         const container = document.getElementById('doctorsContainer');
@@ -350,7 +405,18 @@
                 ? '<span class="verified-badge">✅ Проверен</span>'
                 : '';
 
-            const videoLink = doc.video_room || `https://meet.jit.si/Doctor_${doc.id}`;
+            const videoLink = doc.video || `https://meet.jit.si/Doctor_${doc.id}`;
+
+            let slotsHtml = '';
+            if (doc.schedule && Array.isArray(doc.schedule)) {
+                slotsHtml = doc.schedule.map(time => `
+                    <div class="slot" onclick="bookSlot('${doc.full_name}', '${time}')">
+                        🕐 ${time}
+                    </div>
+                `).join('');
+            } else {
+                slotsHtml = '<div style="color:#7a8fa5;font-size:13px;">Расписание уточняйте у администратора</div>';
+            }
 
             return `
                 <div class="doctor-card">
@@ -362,9 +428,23 @@
                         <span class="price">${doc.price || 0} <small>₽</small></span>
                         <span style="font-size:14px;color:#5a6f88;">Стаж ${doc.experience || 0} лет</span>
                     </div>
-                    <div style="margin-top:14px; display:flex; gap:10px;">
+
+                    <div style="margin-top:14px; border-top:1px solid #eef3f9; padding-top:12px;">
+                        <p style="font-size:13px; color:#5a6f88; margin-bottom:8px; font-weight:600;">
+                            📅 Доступное время для записи:
+                        </p>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                            ${slotsHtml}
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button onclick="bookSlot('${doc.full_name}', '')" class="btn-chat">
+                            💬 Записаться
+                        </button>
                         <a href="${videoLink}" target="_blank" class="btn-call">📹 Видеозвонок</a>
                     </div>
+
                     ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
                 </div>
             `;
@@ -372,7 +452,7 @@
     }
 
     // ============================================================
-    // 4. ЗАГРУЗКА ПРИ СТАРТЕ
+    // 5. ЗАГРУЗКА ПРИ СТАРТЕ
     // ============================================================
     document.addEventListener('DOMContentLoaded', () => {
         searchDoctors();
