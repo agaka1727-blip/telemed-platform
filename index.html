@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Поиск врачей — TeleMed</title>
+    <title>TeleMed — Поиск врачей</title>
     <style>
+        /* ===== БАЗОВЫЕ СТИЛИ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -19,6 +20,10 @@
             max-width: 1200px;
             margin: 0 auto;
         }
+        .hidden {
+            display: none !important;
+        }
+        /* ===== ШАПКА ===== */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -33,6 +38,72 @@
             font-size: 18px;
             margin-top: 8px;
         }
+        /* ===== НАВИГАЦИЯ ===== */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            background: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+        .nav-bar .logo {
+            font-weight: 700;
+            font-size: 18px;
+            color: #0b2b4a;
+        }
+        .nav-bar .logo span {
+            color: #1a73e8;
+        }
+        .nav-bar .nav-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .nav-bar .nav-links button {
+            background: none;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .nav-bar .nav-links .btn-login {
+            background: #1a73e8;
+            color: white;
+        }
+        .nav-bar .nav-links .btn-login:hover {
+            background: #1558b0;
+        }
+        .nav-bar .nav-links .btn-logout {
+            background: #eef3f9;
+            color: #0b2b4a;
+        }
+        .nav-bar .nav-links .btn-logout:hover {
+            background: #dce4ed;
+        }
+        .nav-bar .nav-links .btn-admin {
+            background: #0b2b4a;
+            color: white;
+        }
+        .nav-bar .nav-links .btn-admin:hover {
+            background: #1a3d5e;
+        }
+        .nav-bar .nav-links .user-badge {
+            background: #e6f7e6;
+            color: #1e7e34;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        /* ===== ПОИСК ===== */
         .search-box {
             background: white;
             border-radius: 60px;
@@ -69,6 +140,35 @@
         .search-box button:hover {
             background: #1558b0;
         }
+        /* ===== ФИЛЬТРЫ ===== */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .filter-bar button {
+            background: white;
+            border: 1.5px solid #e8edf3;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #0b2b4a;
+            font-family: inherit;
+        }
+        .filter-bar button.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+        .filter-bar button:hover:not(.active) {
+            border-color: #1a73e8;
+        }
+        /* ===== КАРТОЧКИ ВРАЧЕЙ ===== */
         .doctors-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -152,21 +252,30 @@
             border-radius: 12px;
             margin-left: 8px;
         }
-        .btn-call {
-            background: #1e7e34;
+        .slot {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #1a73e8;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: 600;
+            border-radius: 30px;
+            font-size: 13px;
             cursor: pointer;
             transition: 0.2s;
-            text-decoration: none;
-            display: inline-block;
+            font-weight: 500;
+            border: none;
+            font-family: inherit;
         }
-        .btn-call:hover {
-            background: #146128;
+        .slot:hover {
+            background: #1558b0;
+            transform: scale(1.02);
+        }
+        .slot.booked {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .slot.booked:hover {
+            transform: none;
         }
         .btn-chat {
             background: #1a73e8;
@@ -180,25 +289,40 @@
             transition: 0.2s;
             text-decoration: none;
             display: inline-block;
+            font-family: inherit;
         }
         .btn-chat:hover {
             background: #1558b0;
         }
-        .slot {
-            display: inline-block;
-            padding: 6px 14px;
-            background: #1a73e8;
+        .btn-call {
+            background: #1e7e34;
             color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            font-family: inherit;
+        }
+        .btn-call:hover {
+            background: #146128;
+        }
+        .btn-danger {
+            background: #d93025;
+            color: white;
+            border: none;
+            padding: 8px 16px;
             border-radius: 30px;
             font-size: 13px;
             cursor: pointer;
-            transition: 0.2s;
-            font-weight: 500;
-            border: none;
+            font-family: inherit;
         }
-        .slot:hover {
-            background: #1558b0;
-            transform: scale(1.02);
+        .btn-danger:hover {
+            background: #b91c1c;
         }
         .loading {
             text-align: center;
@@ -212,37 +336,13 @@
             padding: 40px 0;
             font-size: 18px;
         }
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .filter-bar button {
-            background: white;
-            border: 1.5px solid #e8edf3;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            color: #0b2b4a;
-        }
-        .filter-bar button.active {
-            background: #1a73e8;
-            color: white;
-            border-color: #1a73e8;
-        }
         .admin-note {
             text-align: center;
             margin-top: 40px;
             font-size: 13px;
             color: #9aafc4;
         }
-
-        /* Модальное окно */
+        /* ===== МОДАЛЬНОЕ ОКНО ===== */
         .modal {
             display: none;
             position: fixed;
@@ -266,6 +366,8 @@
             width: 100%;
             position: relative;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .modal-content h2 {
             font-size: 24px;
@@ -301,7 +403,8 @@
             margin-bottom: 4px;
         }
         .form-group input,
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 12px 16px;
             border: 1.5px solid #e8edf3;
@@ -311,7 +414,8 @@
             transition: 0.2s;
         }
         .form-group input:focus,
-        .form-group textarea:focus {
+        .form-group textarea:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #1a73e8;
             box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
@@ -331,6 +435,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
+            font-family: inherit;
         }
         .btn-submit:hover {
             background: #1558b0;
@@ -374,45 +479,318 @@
             margin-top: 6px;
             text-align: center;
         }
+        /* ===== АДМИН-ПАНЕЛЬ ===== */
+        .admin-panel {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            margin-top: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+        .admin-panel h2 {
+            color: #0b2b4a;
+            margin-bottom: 20px;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .admin-stats .stat {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        .admin-stats .stat .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0b2b4a;
+        }
+        .admin-stats .stat .label {
+            font-size: 13px;
+            color: #5a6f88;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .admin-table th,
+        .admin-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eef3f9;
+            text-align: left;
+        }
+        .admin-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #0b2b4a;
+        }
+        .admin-table .status-badge {
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .admin-table .status-badge.green {
+            background: #e6f7e6;
+            color: #1e7e34;
+        }
+        .admin-table .status-badge.yellow {
+            background: #fff8e6;
+            color: #7a6500;
+        }
+        .admin-table .status-badge.red {
+            background: #fde8e8;
+            color: #b91c1c;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .admin-actions button {
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .admin-actions .btn-edit {
+            background: #eef3f9;
+            color: #0b2b4a;
+        }
+        .admin-actions .btn-edit:hover {
+            background: #dce4ed;
+        }
+        .admin-actions .btn-delete {
+            background: #fde8e8;
+            color: #b91c1c;
+        }
+        .admin-actions .btn-delete:hover {
+            background: #f5c2c2;
+        }
+        .admin-actions .btn-verify {
+            background: #e6f7e6;
+            color: #1e7e34;
+        }
+        .admin-actions .btn-verify:hover {
+            background: #c8e6c8;
+        }
+        .admin-add-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            margin-bottom: 16px;
+        }
+        .admin-add-btn:hover {
+            background: #1558b0;
+        }
+        /* ===== ЛИЧНЫЙ КАБИНЕТ ВРАЧА ===== */
+        .doctor-cabinet {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            margin-top: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+        .doctor-cabinet .cabinet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .doctor-cabinet .cabinet-header h2 {
+            color: #0b2b4a;
+            font-size: 24px;
+        }
+        .doctor-cabinet .cabinet-header .status {
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .doctor-cabinet .cabinet-header .status.verified {
+            background: #e6f7e6;
+            color: #1e7e34;
+        }
+        .doctor-cabinet .cabinet-header .status.pending {
+            background: #fff8e6;
+            color: #7a6500;
+        }
+        .doctor-cabinet .cabinet-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 20px;
+        }
+        .doctor-cabinet .cabinet-grid .card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 16px;
+        }
+        .doctor-cabinet .cabinet-grid .card h4 {
+            color: #0b2b4a;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .doctor-cabinet .cabinet-grid .card .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eef3f9;
+            font-size: 14px;
+        }
+        .doctor-cabinet .cabinet-grid .card .info-item .label {
+            color: #5a6f88;
+        }
+        .doctor-cabinet .cabinet-grid .card .info-item .value {
+            font-weight: 500;
+            color: #0b2b4a;
+        }
+        .doctor-cabinet .patient-list {
+            list-style: none;
+            padding: 0;
+        }
+        .doctor-cabinet .patient-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eef3f9;
+            font-size: 14px;
+        }
+        .doctor-cabinet .patient-list li .patient-name {
+            font-weight: 500;
+            color: #0b2b4a;
+        }
+        .doctor-cabinet .patient-list li .patient-time {
+            color: #5a6f88;
+        }
+        .doctor-cabinet .video-link {
+            display: inline-block;
+            background: #1e7e34;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .doctor-cabinet .video-link:hover {
+            background: #146128;
+        }
+        @media (max-width: 768px) {
+            .doctor-cabinet .cabinet-grid {
+                grid-template-columns: 1fr;
+            }
+            .admin-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .nav-bar {
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
+                border-radius: 30px;
+                padding: 12px 16px;
+            }
+            .nav-bar .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+        @media (max-width: 480px) {
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+            .search-box {
+                flex-wrap: wrap;
+                border-radius: 30px;
+                padding: 12px 16px;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .search-box button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>🩺 Найти врача</h1>
-        <p>Ищите по ФИО, специализации или симптомам</p>
+<div class="container" id="app">
+
+    <!-- ===== НАВИГАЦИЯ ===== -->
+    <nav class="nav-bar">
+        <div class="logo">Tele<span>Med</span></div>
+        <div class="nav-links" id="navLinks">
+            <!-- Контент навигации заполняется из JS -->
+        </div>
+    </nav>
+
+    <!-- ===== ПУБЛИЧНАЯ ЧАСТЬ ===== -->
+    <div id="publicView">
+        <div class="header">
+            <h1>🩺 Найти врача</h1>
+            <p>Ищите по ФИО, специализации или симптомам</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Например: уролог, цистит, Иванов..." />
+            <button onclick="searchDoctors()">Найти</button>
+        </div>
+
+        <div class="filter-bar" id="filterBar">
+            <button class="active" data-filter="all" onclick="setFilter('all')">Все врачи</button>
+            <button data-filter="verified" onclick="setFilter('verified')">✅ Проверенные</button>
+        </div>
+
+        <div id="doctorsContainer" class="doctors-grid">
+            <div class="loading">Загрузка врачей...</div>
+        </div>
+
+        <div class="admin-note">
+            🔐 Администратор: войдите в админ-панель для управления
+        </div>
     </div>
 
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Например: уролог, цистит, Иванов..." />
-        <button onclick="searchDoctors()">Найти</button>
+    <!-- ===== АДМИН-ПАНЕЛЬ ===== -->
+    <div id="adminView" class="hidden">
+        <div class="admin-panel" id="adminPanel">
+            <!-- Заполняется из JS -->
+        </div>
     </div>
 
-    <div class="filter-bar">
-        <button class="active" data-filter="all" onclick="setFilter('all')">Все врачи</button>
-        <button data-filter="verified" onclick="setFilter('verified')">✅ Проверенные</button>
+    <!-- ===== ЛИЧНЫЙ КАБИНЕТ ВРАЧА ===== -->
+    <div id="doctorView" class="hidden">
+        <div class="doctor-cabinet" id="doctorCabinet">
+            <!-- Заполняется из JS -->
+        </div>
     </div>
 
-    <div id="doctorsContainer" class="doctors-grid">
-        <div class="loading">Загрузка врачей...</div>
-    </div>
-
-    <div class="admin-note">
-        🔐 Администратор: редактируйте список врачей в коде (массив DOCTORS)
-    </div>
 </div>
 
-<!-- ===== МОДАЛЬНОЕ ОКНО ===== -->
+<!-- ===== МОДАЛЬНОЕ ОКНО (ЗАПИСЬ) ===== -->
 <div class="modal" id="bookingModal">
     <div class="modal-content">
         <button class="close" onclick="closeModal()">✕</button>
-
         <div id="formContainer">
             <h2>📋 Запись на консультацию</h2>
             <p class="sub" id="modalDoctorInfo">Врач: Иванов Сергей Петрович</p>
             <p class="sub" id="modalTimeInfo">Время: 10:00</p>
-
             <form id="bookingForm" onsubmit="submitForm(event)">
                 <div class="form-group">
                     <label>Ваше имя *</label>
@@ -430,14 +808,11 @@
                     <label>Комментарий</label>
                     <textarea id="patientComment" placeholder="Опишите ваш вопрос к врачу..."></textarea>
                 </div>
-
                 <div class="form-error" id="formError">Пожалуйста, заполните все обязательные поля</div>
-
                 <button type="submit" class="btn-submit" id="submitBtn">📩 Отправить заявку</button>
                 <div class="video-note">Ссылка на видеозвонок придёт после подтверждения записи</div>
             </form>
         </div>
-
         <div class="form-success" id="formSuccess">
             <div class="icon">✅</div>
             <h3>Заявка отправлена!</h3>
@@ -447,262 +822,187 @@
     </div>
 </div>
 
+<!-- ===== МОДАЛЬНОЕ ОКНО (ВХОД) ===== -->
+<div class="modal" id="loginModal">
+    <div class="modal-content" style="max-width:400px;">
+        <button class="close" onclick="closeLoginModal()">✕</button>
+        <h2>🔐 Вход</h2>
+        <p class="sub">Войдите как врач или администратор</p>
+        <form id="loginForm" onsubmit="login(event)">
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" id="loginUsername" placeholder="Введите логин" required />
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="loginPassword" placeholder="Введите пароль" required />
+            </div>
+            <div class="form-error" id="loginError">Неверный логин или пароль</div>
+            <button type="submit" class="btn-submit">Войти</button>
+        </form>
+    </div>
+</div>
+
 <script>
-    // ============================================================
-    // 1. БАЗА ДАННЫХ ВРАЧЕЙ
-    // ============================================================
-    const DOCTORS = [
-        {
-            full_name: "Иванов Сергей Петрович",
-            specialization: "Врач-уролог",
-            symptoms: ["цистит", "простатит", "мочекаменная болезнь"],
-            experience: 22,
-            price: 3500,
-            verified: true,
-            bio: "Врач-уролог высшей категории. Стаж 22 года.",
-            video: "https://meet.jit.si/Urolog_Ivanov",
-            schedule: ["10:00", "11:00", "12:00", "14:00", "15:00"]
-        },
-        {
-            full_name: "Сариева Алия",
-            specialization: "Юрист (медицинское право)",
-            symptoms: ["юридические консультации", "медицинские споры"],
-            experience: 18,
-            price: 5000,
-            verified: true,
-            bio: "Юрист с 18-летним стажем. Специализируюсь на медицинском праве.",
-            video: "https://meet.jit.si/SarievaAlia",
-            schedule: ["09:00", "10:00", "11:00", "13:00", "14:00"]
-        },
-        {
-            full_name: "Петрова Елена Викторовна",
-            specialization: "Терапевт",
-            symptoms: ["кашель", "температура", "боль в горле", "грипп"],
-            experience: 15,
-            price: 2500,
-            verified: false,
-            bio: "Терапевт с 15-летним стажем. Диагностика и лечение простудных заболеваний.",
-            video: "https://meet.jit.si/Therapist_Petrova",
-            schedule: ["08:00", "09:00", "10:00", "11:00", "12:00"]
-        }
-    ];
+    // ================================================================
+    // 1. ДАННЫЕ
+    // ================================================================
 
-    // ============================================================
-    // 2. ПЕРЕМЕННЫЕ ДЛЯ ФОРМЫ
-    // ============================================================
-    let selectedDoctor = '';
-    let selectedTime = '';
+    // ----- Врачи -----
+    const DOCTORS = [{
+        id: 1,
+        full_name: "Иванов Сергей Петрович",
+        specialization: "Врач-уролог",
+        symptoms: ["цистит", "простатит", "мочекаменная болезнь"],
+        experience: 22,
+        price: 3500,
+        verified: true,
+        bio: "Врач-уролог высшей категории. Стаж 22 года.",
+        video: "https://meet.jit.si/Urolog_Ivanov",
+        schedule: ["10:00", "11:00", "12:00", "14:00", "15:00"],
+        login: "ivanov",
+        password: "doc123"
+    }, {
+        id: 2,
+        full_name: "Сариева Алия",
+        specialization: "Юрист (медицинское право)",
+        symptoms: ["юридические консультации", "медицинские споры"],
+        experience: 18,
+        price: 5000,
+        verified: true,
+        bio: "Юрист с 18-летним стажем. Специализируюсь на медицинском праве.",
+        video: "https://meet.jit.si/SarievaAlia",
+        schedule: ["09:00", "10:00", "11:00", "13:00", "14:00"],
+        login: "sarieva",
+        password: "doc123"
+    }, {
+        id: 3,
+        full_name: "Петрова Елена Викторовна",
+        specialization: "Терапевт",
+        symptoms: ["кашель", "температура", "боль в горле", "грипп"],
+        experience: 15,
+        price: 2500,
+        verified: false,
+        bio: "Терапевт с 15-летним стажем. Диагностика и лечение простудных заболеваний.",
+        video: "https://meet.jit.si/Therapist_Petrova",
+        schedule: ["08:00", "09:00", "10:00", "11:00", "12:00"],
+        login: "petrova",
+        password: "doc123"
+    }];
 
-    // ============================================================
-    // 3. ОТКРЫТЬ/ЗАКРЫТЬ ФОРМУ
-    // ============================================================
-    function openBooking(doctorName, time) {
-        selectedDoctor = doctorName;
-        selectedTime = time || 'не выбрано';
+    // ----- Администратор -----
+    const ADMIN = {
+        login: "admin",
+        password: "admin123"
+    };
 
-        document.getElementById('modalDoctorInfo').textContent = `Врач: ${doctorName}`;
-        document.getElementById('modalTimeInfo').textContent = `Время: ${time || 'не выбрано'}`;
+    // ----- Заявки (хранятся в памяти, потом можно сохранять) -----
+    let bookings = [];
 
-        document.getElementById('bookingForm').reset();
-        document.getElementById('formContainer').style.display = 'block';
-        document.getElementById('formSuccess').classList.remove('active');
-        document.getElementById('formError').classList.remove('active');
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
+    // ================================================================
+    // 2. СОСТОЯНИЕ
+    // ================================================================
 
-        document.getElementById('bookingModal').classList.add('active');
-    }
-
-    function closeModal() {
-        document.getElementById('bookingModal').classList.remove('active');
-    }
-
-    document.getElementById('bookingModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
-
-    // ============================================================
-    // 4. ОТПРАВКА ФОРМЫ
-    // ============================================================
-    function submitForm(event) {
-        event.preventDefault();
-
-        const name = document.getElementById('patientName').value.trim();
-        const phone = document.getElementById('patientPhone').value.trim();
-        const email = document.getElementById('patientEmail').value.trim();
-        const comment = document.getElementById('patientComment').value.trim();
-
-        if (!name || !phone) {
-            document.getElementById('formError').textContent = 'Пожалуйста, заполните имя и телефон';
-            document.getElementById('formError').classList.add('active');
-            return;
-        }
-
-        document.getElementById('formError').classList.remove('active');
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = '⏳ Отправка...';
-
-        // ============================================================
-        // ОТПРАВКА В TELEGRAM (раскомментируй, когда настроишь бота)
-        // ============================================================
-        /*
-        const BOT_TOKEN = 'ВАШ_ТОКЕН';
-        const CHAT_ID = 'ВАШ_CHAT_ID';
-        const message = `📋 Новая заявка на запись!
-        👤 Имя: ${name}
-        📞 Телефон: ${phone}
-        📧 Email: ${email || 'не указан'}
-        👨‍⚕️ Врач: ${selectedDoctor}
-        🕐 Время: ${selectedTime}
-        💬 Комментарий: ${comment || 'нет'}`;
-
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: CHAT_ID, text: message })
-        })
-        .then(() => showSuccess())
-        .catch(() => showError());
-        */
-
-        // ============================================================
-        // ПОКАЗЫВАЕМ УСПЕХ (для теста)
-        // ============================================================
-        showSuccess();
-    }
-
-    function showSuccess() {
-        document.getElementById('formContainer').style.display = 'none';
-        document.getElementById('formSuccess').classList.add('active');
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
-    }
-
-    function showError() {
-        document.getElementById('formError').textContent = 'Ошибка отправки. Попробуйте позже.';
-        document.getElementById('formError').classList.add('active');
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
-    }
-
-    // ============================================================
-    // 5. ПОИСК И ФИЛЬТРЫ
-    // ============================================================
+    let currentUser = null; // null = пациент, 'admin' = админ, { doctor } = врач
     let currentFilter = 'all';
 
-    function searchDoctors() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        const container = document.getElementById('doctorsContainer');
+    // ================================================================
+    // 3. НАВИГАЦИЯ
+    // ================================================================
 
-        let results = DOCTORS;
-
-        if (currentFilter === 'verified') {
-            results = results.filter(doc => doc.verified === true);
+    function renderNav() {
+        const nav = document.getElementById('navLinks');
+        let html = '';
+        if (currentUser === 'admin') {
+            html = `
+                <span class="user-badge">👩‍💼 Админ</span>
+                <button class="btn-admin" onclick="showView('admin')">📊 Панель</button>
+                <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
+            `;
+        } else if (currentUser && currentUser.login) {
+            html = `
+                <span class="user-badge">👨‍⚕️ ${currentUser.full_name}</span>
+                <button class="btn-admin" onclick="showView('doctor')">📋 Кабинет</button>
+                <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
+            `;
+        } else {
+            html = `
+                <button class="btn-login" onclick="openLoginModal()">🔐 Вход</button>
+            `;
         }
-
-        if (query.length > 0) {
-            results = results.filter(doc => {
-                const fullName = doc.full_name.toLowerCase();
-                const spec = doc.specialization.toLowerCase();
-                const symptoms = doc.symptoms.map(s => s.toLowerCase()).join(' ');
-                return fullName.includes(query) || spec.includes(query) || symptoms.includes(query);
-            });
-        }
-
-        results.sort((a, b) => (a.verified === b.verified) ? 0 : a.verified ? -1 : 1);
-
-        renderDoctors(results);
+        nav.innerHTML = html;
     }
 
-    function setFilter(filter) {
-        currentFilter = filter;
-        document.querySelectorAll('.filter-bar button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.filter === filter);
-        });
-        searchDoctors();
+    // ================================================================
+    // 4. ПЕРЕКЛЮЧЕНИЕ ВИДОВ
+    // ================================================================
+
+    function showView(view) {
+        document.getElementById('publicView').classList.add('hidden');
+        document.getElementById('adminView').classList.add('hidden');
+        document.getElementById('doctorView').classList.add('hidden');
+
+        if (view === 'public') {
+            document.getElementById('publicView').classList.remove('hidden');
+            searchDoctors();
+        } else if (view === 'admin' && currentUser === 'admin') {
+            document.getElementById('adminView').classList.remove('hidden');
+            renderAdminPanel();
+        } else if (view === 'doctor' && currentUser && currentUser.login) {
+            document.getElementById('doctorView').classList.remove('hidden');
+            renderDoctorCabinet();
+        }
+        renderNav();
     }
 
-    // ============================================================
-    // 6. ОТРИСОВКА КАРТОЧЕК (БЕЗ КНОПКИ ВИДЕОЗВОНКА)
-    // ============================================================
-    function renderDoctors(doctors) {
-        const container = document.getElementById('doctorsContainer');
+    // ================================================================
+    // 5. ВХОД / ВЫХОД
+    // ================================================================
 
-        if (doctors.length === 0) {
-            container.innerHTML = '<div class="no-results">👀 Врачей не найдено</div>';
+    function openLoginModal() {
+        document.getElementById('loginModal').classList.add('active');
+        document.getElementById('loginError').classList.remove('active');
+        document.getElementById('loginForm').reset();
+    }
+
+    function closeLoginModal() {
+        document.getElementById('loginModal').classList.remove('active');
+    }
+
+    function login(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+
+        // Проверка админа
+        if (username === ADMIN.login && password === ADMIN.password) {
+            currentUser = 'admin';
+            closeLoginModal();
+            showView('admin');
             return;
         }
 
-        container.innerHTML = doctors.map(doc => {
-            const initials = doc.full_name
-                .split(' ')
-                .map(word => word[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase();
+        // Проверка врача
+        const doctor = DOCTORS.find(d => d.login === username && d.password === password);
+        if (doctor) {
+            currentUser = doctor;
+            closeLoginModal();
+            showView('doctor');
+            return;
+        }
 
-            let symptomsHtml = '';
-            if (doc.symptoms && Array.isArray(doc.symptoms)) {
-                symptomsHtml = doc.symptoms.map(s => `<span>${s}</span>`).join(' ');
-            }
-
-            const verifiedBadge = doc.verified
-                ? '<span class="verified-badge">✅ Проверен</span>'
-                : '';
-
-            let slotsHtml = '';
-            if (doc.schedule && Array.isArray(doc.schedule)) {
-                slotsHtml = doc.schedule.map(time => `
-                    <div class="slot" onclick="openBooking('${doc.full_name}', '${time}')">
-                        🕐 ${time}
-                    </div>
-                `).join('');
-            } else {
-                slotsHtml = '<div style="color:#7a8fa5;font-size:13px;">Расписание уточняйте у администратора</div>';
-            }
-
-            return `
-                <div class="doctor-card">
-                    <div class="avatar">${initials}</div>
-                    <h3>${doc.full_name} ${verifiedBadge}</h3>
-                    <div class="specialization">${doc.specialization}</div>
-                    <div class="symptoms">${symptomsHtml}</div>
-                    <div class="info-row">
-                        <span class="price">${doc.price || 0} <small>сом</small></span>
-                        <span style="font-size:14px;color:#5a6f88;">Стаж ${doc.experience || 0} лет</span>
-                    </div>
-
-                    <div style="margin-top:14px; border-top:1px solid #eef3f9; padding-top:12px;">
-                        <p style="font-size:13px; color:#5a6f88; margin-bottom:8px; font-weight:600;">
-                            📅 Доступное время для записи:
-                        </p>
-                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                            ${slotsHtml}
-                        </div>
-                    </div>
-
-                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-                        <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">
-                            💬 Записаться
-                        </button>
-                    </div>
-
-                    ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
-                </div>
-            `;
-        }).join('');
+        document.getElementById('loginError').classList.add('active');
     }
 
-    // ============================================================
-    // 7. ЗАГРУЗКА ПРИ СТАРТЕ
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', () => {
-        searchDoctors();
-        document.getElementById('searchInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') searchDoctors();
-        });
-    });
-</script>
+    function logout() {
+        currentUser = null;
+        showView('public');
+        renderNav();
+    }
 
-</body>
-</html>
+    // ================================================================
+    // 6. ПОИСК И ФИЛЬТРАЦИЯ (ПУБЛИЧНАЯ ЧАСТЬ)
+    // ================================================================
+
+    function searchDoctors() {
+        const query = document.getElementById('searchInput').
