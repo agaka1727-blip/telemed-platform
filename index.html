@@ -1,59 +1,48 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Поиск врачей</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Поиск врачей — Телемедицина</title>
     <style>
-        /* ----- Обнуление и база ----- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             background: #f0f4f9;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
             padding: 40px 20px;
         }
         .container {
-            max-width: 900px;
-            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-
-        /* ----- Шапка ----- */
         .header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 40px;
         }
         .header h1 {
-            font-size: 38px;
+            font-size: 42px;
             font-weight: 700;
             color: #0b2b4a;
-            letter-spacing: -0.5px;
         }
         .header p {
             color: #5a6f88;
             font-size: 18px;
-            margin-top: 6px;
+            margin-top: 8px;
         }
-
-        /* ----- Поиск ----- */
         .search-box {
-            background: #ffffff;
+            background: white;
             border-radius: 60px;
-            padding: 6px 6px 6px 24px;
+            padding: 8px 8px 8px 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-            max-width: 600px;
-            margin: 0 auto 30px;
-            border: 1px solid rgba(0, 0, 0, 0.04);
+            max-width: 700px;
+            margin: 0 auto 40px;
         }
         .search-box input {
             flex: 1;
@@ -61,7 +50,6 @@
             outline: none;
             font-size: 16px;
             padding: 14px 0;
-            background: transparent;
             color: #0b2b4a;
         }
         .search-box input::placeholder {
@@ -70,396 +58,329 @@
         .search-box button {
             background: #1a73e8;
             border: none;
-            color: #fff;
-            padding: 12px 30px;
+            color: white;
+            padding: 12px 28px;
             border-radius: 40px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-            white-space: nowrap;
+            transition: 0.2s;
         }
         .search-box button:hover {
             background: #1558b0;
         }
-
-        /* ----- Карточка врача ----- */
-        .card {
-            background: #ffffff;
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .doctor-card {
+            background: white;
             border-radius: 20px;
-            padding: 24px 28px;
-            margin-bottom: 18px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: 0.2s;
             border: 1px solid #e8edf3;
-            transition: box-shadow 0.2s;
         }
-        .card:hover {
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.07);
+        .doctor-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
         }
-        .card-top {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .avatar {
-            width: 64px;
-            height: 64px;
+        .doctor-card .avatar {
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: #dce4ed;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
-            font-weight: 700;
-            color: #1a3d5e;
-            flex-shrink: 0;
-        }
-        .card-info {
-            flex: 1;
-        }
-        .card-info h3 {
-            font-size: 20px;
-            color: #0b2b4a;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .badge-verified {
-            background: #e6f7e6;
-            color: #1e7e34;
-            font-size: 12px;
+            font-size: 28px;
             font-weight: 600;
-            padding: 2px 12px;
-            border-radius: 20px;
+            color: #1a3d5e;
+            margin-bottom: 16px;
         }
-        .specialization {
+        .doctor-card h3 {
+            font-size: 18px;
+            color: #0b2b4a;
+            margin-bottom: 4px;
+        }
+        .doctor-card .specialization {
             color: #1a73e8;
             font-weight: 600;
-            font-size: 15px;
-            margin-top: 2px;
+            font-size: 14px;
+            margin-bottom: 8px;
         }
-        .symptoms {
-            margin: 10px 0 12px 0;
+        .doctor-card .symptoms {
+            color: #5a6f88;
+            font-size: 14px;
+            margin-bottom: 12px;
+            line-height: 1.5;
         }
-        .symptom-tag {
-            display: inline-block;
+        .doctor-card .symptoms span {
             background: #eef3f9;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            color: #2d4059;
-            margin: 0 6px 6px 0;
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin: 2px 4px 2px 0;
+            display: inline-block;
+            font-size: 12px;
         }
-        .card-bottom {
+        .doctor-card .info-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid #eef3f9;
             padding-top: 14px;
-            margin-top: 4px;
-            flex-wrap: wrap;
-            gap: 12px;
+            margin-top: 6px;
         }
-        .price {
-            font-size: 20px;
+        .doctor-card .price {
             font-weight: 700;
+            font-size: 18px;
             color: #0b2b4a;
         }
-        .price small {
+        .doctor-card .price small {
             font-weight: 400;
             font-size: 14px;
             color: #7a8fa5;
         }
-        .experience {
-            color: #5a6f88;
-            font-size: 15px;
+        .verified-badge {
+            display: inline-block;
+            background: #e6f7e6;
+            color: #1e7e34;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 12px;
+            margin-left: 8px;
         }
         .btn-call {
             background: #1e7e34;
-            color: #fff;
+            color: white;
             border: none;
-            padding: 10px 22px;
+            padding: 10px 20px;
             border-radius: 40px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            transition: 0.2s;
             text-decoration: none;
             display: inline-block;
-            transition: background 0.2s;
         }
         .btn-call:hover {
             background: #146128;
         }
-        .bio {
-            font-size: 14px;
-            color: #5a6f88;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #eef3f9;
-        }
-
-        /* ----- Состояния ----- */
         .loading {
             text-align: center;
             color: #7a8fa5;
-            padding: 50px 0;
+            padding: 60px 0;
             font-size: 18px;
         }
-        .empty {
+        .no-results {
             text-align: center;
             color: #7a8fa5;
-            padding: 50px 0;
+            padding: 40px 0;
             font-size: 18px;
         }
-        .error {
-            text-align: center;
-            color: #d93025;
-            padding: 50px 0;
-            font-size: 18px;
-        }
-        .footer-note {
+        .admin-note {
             text-align: center;
             margin-top: 40px;
             font-size: 13px;
             color: #9aafc4;
         }
-
-        /* ----- Адаптив ----- */
-        @media (max-width: 600px) {
-            .search-box {
-                flex-wrap: wrap;
-                border-radius: 30px;
-                padding: 12px 16px;
-                background: #fff;
-            }
-            .search-box input {
-                width: 100%;
-                padding: 10px 0;
-            }
-            .search-box button {
-                width: 100%;
-                justify-content: center;
-            }
-            .card-top {
-                flex-wrap: wrap;
-            }
-            .card-bottom {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .btn-call {
-                text-align: center;
-            }
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .filter-bar button {
+            background: white;
+            border: 1.5px solid #e8edf3;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #0b2b4a;
+        }
+        .filter-bar button.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+        .filter-bar button:hover:not(.active) {
+            border-color: #1a73e8;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Шапка -->
     <div class="header">
         <h1>🩺 Найти врача</h1>
         <p>Ищите по ФИО, специализации или симптомам</p>
     </div>
 
-    <!-- Поиск -->
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Например: кардиолог, головная боль, Иванова...">
-        <button id="searchButton">Найти</button>
+        <input type="text" id="searchInput" placeholder="Например: кардиолог, головная боль, Иванова..." />
+        <button onclick="searchDoctors()">Найти</button>
     </div>
 
-    <!-- Результаты -->
-    <div id="result">
-        <div class="loading">⏳ Загрузка врачей...</div>
+    <div class="filter-bar">
+        <button class="active" data-filter="all" onclick="setFilter('all')">Все врачи</button>
+        <button data-filter="verified" onclick="setFilter('verified')">✅ Проверенные</button>
     </div>
 
-    <div class="footer-note">
-        🔐 Администратор: добавляйте врачей в Supabase → Table Editor
+    <div id="doctorsContainer" class="doctors-grid">
+        <div class="loading">Загрузка врачей...</div>
+    </div>
+
+    <div class="admin-note">
+        🔐 Администратор: редактируйте список врачей в файле doctorsData.js
     </div>
 </div>
 
-<!-- ===== SCRIPTS ===== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-</script>
 <script>
-    (function() {
-        'use strict';
+    // ============================================================
+    // 1. БАЗА ДАННЫХ ВРАЧЕЙ (ХРАНИТСЯ ПРЯМО В КОДЕ)
+    //    Добавляйте врачей сюда, и они появятся на сайте!
+    // ============================================================
+    const DOCTORS = [
+        {
+            id: 1,
+            full_name: "Сариева Алия",
+            specialization: "Юрист (медицинское право)",
+            symptoms: ["юридические консультации", "медицинские споры", "трудовые споры"],
+            experience: 18,
+            price: 5000,
+            verified: true,
+            bio: "Юрист с 18-летним стажем. Специализируюсь на медицинском праве.",
+            video_room: "https://meet.jit.si/SarievaAlia"
+        },
+        {
+            id: 2,
+            full_name: "Иванов Сергей Петрович",
+            specialization: "Врач-уролог",
+            symptoms: ["цистит", "пиелонефрит", "простатит", "мочекаменная болезнь"],
+            experience: 22,
+            price: 3500,
+            verified: true,
+            bio: "Врач-уролог высшей категории. Стаж 22 года.",
+            video_room: "https://meet.jit.si/Urolog_Ivanov"
+        },
+        {
+            id: 3,
+            full_name: "Петрова Елена Викторовна",
+            specialization: "Терапевт",
+            symptoms: ["кашель", "температура", "боль в горле", "грипп"],
+            experience: 15,
+            price: 2500,
+            verified: false,
+            bio: "Терапевт с 15-летним стажем. Диагностика и лечение простудных заболеваний.",
+            video_room: "https://meet.jit.si/Therapist_Petrova"
+        }
+    ];
 
-        // ------------------------------------------------------------------
-        // 1. КОНФИГУРАЦИЯ (ваши данные)
-        // ------------------------------------------------------------------
-        var CONFIG = {
-            url: 'https://ombfmuzgsnppgolbyih.supabase.co',
-            key: 'sb_publishable_wFHOU4Et4y_ymIDZuizkZg_0Ti3ecIs'
-        };
+    // ============================================================
+    // 2. ПОИСК И ФИЛЬТРАЦИЯ
+    // ============================================================
+    let currentFilter = 'all';
 
-        // ------------------------------------------------------------------
-        // 2. ИНИЦИАЛИЗАЦИЯ КЛИЕНТА
-        //    — создаём ДО того, как будут вызваны любые функции
-        // ------------------------------------------------------------------
-        var client = window.supabase.createClient(CONFIG.url, CONFIG.key);
+    function searchDoctors() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const container = document.getElementById('doctorsContainer');
 
-        // ------------------------------------------------------------------
-        // 3. ЭЛЕМЕНТЫ DOM
-        // ------------------------------------------------------------------
-        var input = document.getElementById('searchInput');
-        var button = document.getElementById('searchButton');
-        var resultContainer = document.getElementById('result');
+        let results = DOCTORS;
 
-        // ------------------------------------------------------------------
-        // 4. ОСНОВНАЯ ФУНКЦИЯ ПОИСКА
-        // ------------------------------------------------------------------
-        function searchDoctors() {
-            var query = input.value.trim();
-            resultContainer.innerHTML = '<div class="loading">⏳ Ищем...</div>';
-
-            // Строим запрос
-            var request = client.from('doctors').select('*');
-
-            if (query.length > 0) {
-                // Ищем по ФИО, специализации и симптомам (как строка)
-                request = request.or(
-                    'full_name.ilike.%' + query + '%,' +
-                    'specialization.ilike.%' + query + '%'
-                );
-                // Дополнительно ищем в массиве symptoms (если поле есть)
-                request = request.filter('symptoms', 'cs', '{' + query + '}');
-            }
-
-            request
-                .then(function(response) {
-                    var data = response.data;
-                    var error = response.error;
-
-                    if (error) {
-                        resultContainer.innerHTML = '<div class="error">❌ Ошибка БД: ' + error.message + '</div>';
-                        return;
-                    }
-
-                    if (!data || data.length === 0) {
-                        // Если ничего не нашли — пробуем поискать только по ФИО и специализации
-                        // (это нужно, если symptoms не сработал)
-                        var fallbackRequest = client.from('doctors').select('*');
-                        if (query.length > 0) {
-                            fallbackRequest = fallbackRequest.or(
-                                'full_name.ilike.%' + query + '%,' +
-                                'specialization.ilike.%' + query + '%'
-                            );
-                        }
-                        fallbackRequest
-                            .then(function(fallbackResponse) {
-                                var fallbackData = fallbackResponse.data;
-                                var fallbackError = fallbackResponse.error;
-                                if (fallbackError) {
-                                    resultContainer.innerHTML = '<div class="error">❌ Ошибка: ' + fallbackError.message + '</div>';
-                                    return;
-                                }
-                                if (!fallbackData || fallbackData.length === 0) {
-                                    resultContainer.innerHTML = '<div class="empty">👀 Врачей не найдено</div>';
-                                    return;
-                                }
-                                renderCards(fallbackData);
-                            })
-                            .catch(function(err) {
-                                resultContainer.innerHTML = '<div class="error">❌ Ошибка: ' + err.message + '</div>';
-                            });
-                        return;
-                    }
-
-                    renderCards(data);
-                })
-                .catch(function(err) {
-                    resultContainer.innerHTML = '<div class="error">❌ Ошибка сети: ' + err.message + '</div>';
-                });
+        // Фильтр по статусу проверки
+        if (currentFilter === 'verified') {
+            results = results.filter(doc => doc.verified === true);
         }
 
-        // ------------------------------------------------------------------
-        // 5. ОТРИСОВКА КАРТОЧЕК
-        // ------------------------------------------------------------------
-        function renderCards(doctors) {
-            var html = '';
-            for (var i = 0; i < doctors.length; i++) {
-                var doc = doctors[i];
+        // Поиск по тексту (ФИО, специализация, симптомы)
+        if (query.length > 0) {
+            results = results.filter(doc => {
+                const fullName = doc.full_name.toLowerCase();
+                const spec = doc.specialization.toLowerCase();
+                const symptoms = doc.symptoms.map(s => s.toLowerCase()).join(' ');
+                return fullName.includes(query) || spec.includes(query) || symptoms.includes(query);
+            });
+        }
 
-                // Инициалы
-                var nameParts = doc.full_name ? doc.full_name.trim().split(' ') : [''];
-                var initials = '';
-                for (var j = 0; j < Math.min(nameParts.length, 2); j++) {
-                    if (nameParts[j].length > 0) {
-                        initials += nameParts[j].charAt(0).toUpperCase();
-                    }
-                }
+        // Сортируем: сначала проверенные
+        results.sort((a, b) => (a.verified === b.verified) ? 0 : a.verified ? -1 : 1);
 
-                // Симптомы
-                var symptomsHtml = '';
-                if (doc.symptoms && Array.isArray(doc.symptoms)) {
-                    for (var k = 0; k < doc.symptoms.length; k++) {
-                        symptomsHtml += '<span class="symptom-tag">' + escapeHtml(doc.symptoms[k]) + '</span>';
-                    }
-                }
+        renderDoctors(results);
+    }
 
-                // Бейдж верификации
-                var verifiedBadge = doc.verified ? '<span class="badge-verified">✅ Проверен</span>' : '';
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-bar button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        searchDoctors();
+    }
 
-                // Био
-                var bioHtml = doc.bio ? '<div class="bio">' + escapeHtml(doc.bio) + '</div>' : '';
+    // ============================================================
+    // 3. ОТРИСОВКА КАРТОЧЕК
+    // ============================================================
+    function renderDoctors(doctors) {
+        const container = document.getElementById('doctorsContainer');
 
-                html += `
-                    <div class="card">
-                        <div class="card-top">
-                            <div class="avatar">${initials}</div>
-                            <div class="card-info">
-                                <h3>${escapeHtml(doc.full_name)} ${verifiedBadge}</h3>
-                                <div class="specialization">${escapeHtml(doc.specialization)}</div>
-                            </div>
-                        </div>
-                        ${symptomsHtml ? '<div class="symptoms">' + symptomsHtml + '</div>' : ''}
-                        <div class="card-bottom">
-                            <div>
-                                <span class="price">${doc.price || 0} <small>₽</small></span>
-                            </div>
-                            <div class="experience">Стаж ${doc.experience || 0} лет</div>
-                            <a href="https://meet.jit.si/Doctor_${doc.id}" target="_blank" class="btn-call">📹 Видеозвонок</a>
-                        </div>
-                        ${bioHtml}
+        if (doctors.length === 0) {
+            container.innerHTML = '<div class="no-results">👀 Врачей не найдено</div>';
+            return;
+        }
+
+        container.innerHTML = doctors.map(doc => {
+            const initials = doc.full_name
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase();
+
+            let symptomsHtml = '';
+            if (doc.symptoms && Array.isArray(doc.symptoms)) {
+                symptomsHtml = doc.symptoms.map(s => `<span>${s}</span>`).join(' ');
+            }
+
+            const verifiedBadge = doc.verified
+                ? '<span class="verified-badge">✅ Проверен</span>'
+                : '';
+
+            const videoLink = doc.video_room || `https://meet.jit.si/Doctor_${doc.id}`;
+
+            return `
+                <div class="doctor-card">
+                    <div class="avatar">${initials}</div>
+                    <h3>${doc.full_name} ${verifiedBadge}</h3>
+                    <div class="specialization">${doc.specialization}</div>
+                    <div class="symptoms">${symptomsHtml}</div>
+                    <div class="info-row">
+                        <span class="price">${doc.price || 0} <small>₽</small></span>
+                        <span style="font-size:14px;color:#5a6f88;">Стаж ${doc.experience || 0} лет</span>
                     </div>
-                `;
-            }
-            resultContainer.innerHTML = html;
-        }
+                    <div style="margin-top:14px; display:flex; gap:10px;">
+                        <a href="${videoLink}" target="_blank" class="btn-call">📹 Видеозвонок</a>
+                    </div>
+                    ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
 
-        // ------------------------------------------------------------------
-        // 6. ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЕЗОПАСНОСТИ (экранирование)
-        // ------------------------------------------------------------------
-        function escapeHtml(text) {
-            if (!text) return '';
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ------------------------------------------------------------------
-        // 7. ОБРАБОТЧИКИ СОБЫТИЙ
-        // ------------------------------------------------------------------
-        button.addEventListener('click', searchDoctors);
-
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchDoctors();
-            }
+    // ============================================================
+    // 4. ЗАГРУЗКА ПРИ СТАРТЕ
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        searchDoctors();
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') searchDoctors();
         });
-
-        // ------------------------------------------------------------------
-        // 8. АВТОЗАГРУЗКА ПРИ СТАРТЕ
-        // ------------------------------------------------------------------
-        window.addEventListener('load', function() {
-            searchDoctors();
-        });
-
-    })();
+    });
 </script>
+
 </body>
 </html>
