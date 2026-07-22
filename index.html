@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TeleMed — Поиск врачей</title>
     <style>
-        /* ===== БАЗОВЫЕ СТИЛИ ===== */
+        /* ===== БАЗОВЫЕ СТИЛИ (ОСТАЛИСЬ БЕЗ ИЗМЕНЕНИЙ) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -23,7 +23,6 @@
         .hidden {
             display: none !important;
         }
-        /* ===== ШАПКА ===== */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -38,7 +37,6 @@
             font-size: 18px;
             margin-top: 8px;
         }
-        /* ===== НАВИГАЦИЯ ===== */
         .nav-bar {
             display: flex;
             justify-content: space-between;
@@ -62,6 +60,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
         .nav-bar .nav-links button {
             background: none;
@@ -103,7 +102,6 @@
             font-size: 13px;
             font-weight: 600;
         }
-        /* ===== ПОИСК ===== */
         .search-box {
             background: white;
             border-radius: 60px;
@@ -140,7 +138,6 @@
         .search-box button:hover {
             background: #1558b0;
         }
-        /* ===== ФИЛЬТРЫ ===== */
         .filter-bar {
             display: flex;
             gap: 12px;
@@ -168,7 +165,6 @@
         .filter-bar button:hover:not(.active) {
             border-color: #1a73e8;
         }
-        /* ===== КАРТОЧКИ ВРАЧЕЙ ===== */
         .doctors-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -324,6 +320,19 @@
         .btn-danger:hover {
             background: #b91c1c;
         }
+        .btn-success {
+            background: #1e7e34;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-success:hover {
+            background: #146128;
+        }
         .loading {
             text-align: center;
             color: #7a8fa5;
@@ -342,7 +351,6 @@
             font-size: 13px;
             color: #9aafc4;
         }
-        /* ===== МОДАЛЬНОЕ ОКНО ===== */
         .modal {
             display: none;
             position: fixed;
@@ -479,7 +487,6 @@
             margin-top: 6px;
             text-align: center;
         }
-        /* ===== АДМИН-ПАНЕЛЬ ===== */
         .admin-panel {
             background: white;
             border-radius: 24px;
@@ -596,7 +603,8 @@
         .admin-add-btn:hover {
             background: #1558b0;
         }
-        /* ===== ЛИЧНЫЙ КАБИНЕТ ВРАЧА ===== */
+
+        /* ===== НОВЫЙ КАБИНЕТ ВРАЧА С РЕДАКТИРОВАНИЕМ ===== */
         .doctor-cabinet {
             background: white;
             border-radius: 24px;
@@ -610,6 +618,7 @@
             align-items: flex-start;
             flex-wrap: wrap;
             gap: 12px;
+            margin-bottom: 20px;
         }
         .doctor-cabinet .cabinet-header h2 {
             color: #0b2b4a;
@@ -633,7 +642,6 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
-            margin-top: 20px;
         }
         .doctor-cabinet .cabinet-grid .card {
             background: #f8fafc;
@@ -658,6 +666,14 @@
         .doctor-cabinet .cabinet-grid .card .info-item .value {
             font-weight: 500;
             color: #0b2b4a;
+        }
+        .doctor-cabinet .cabinet-grid .card .info-item .value input {
+            border: 1px solid #e8edf3;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
         }
         .doctor-cabinet .patient-list {
             list-style: none;
@@ -691,6 +707,110 @@
         .doctor-cabinet .video-link:hover {
             background: #146128;
         }
+        .doctor-cabinet .edit-slot {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #eef3f9;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            margin: 2px;
+            border: none;
+            font-family: inherit;
+        }
+        .doctor-cabinet .edit-slot:hover {
+            background: #dce4ed;
+        }
+        .doctor-cabinet .add-slot-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .doctor-cabinet .add-slot-form input {
+            padding: 6px 12px;
+            border: 1px solid #e8edf3;
+            border-radius: 20px;
+            font-size: 13px;
+            width: 120px;
+        }
+        .doctor-cabinet .add-slot-form button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 20px;
+            background: #1a73e8;
+            color: white;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .doctor-cabinet .add-slot-form button:hover {
+            background: #1558b0;
+        }
+        .doctor-cabinet .edit-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+        .doctor-cabinet .edit-btn:hover {
+            background: #1558b0;
+        }
+        .doctor-cabinet .save-btn {
+            background: #1e7e34;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+        .doctor-cabinet .save-btn:hover {
+            background: #146128;
+        }
+        .doctor-cabinet .cancel-btn {
+            background: #eef3f9;
+            color: #0b2b4a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+        .doctor-cabinet .cancel-btn:hover {
+            background: #dce4ed;
+        }
+        .doctor-cabinet .login-info {
+            background: #f0f7ff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-left: 4px solid #1a73e8;
+        }
+        .doctor-cabinet .login-info strong {
+            color: #0b2b4a;
+        }
+        .doctor-cabinet .login-info .copy-btn {
+            background: none;
+            border: none;
+            color: #1a73e8;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+        .doctor-cabinet .login-info .copy-btn:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 768px) {
             .doctor-cabinet .cabinet-grid {
                 grid-template-columns: 1fr;
@@ -706,7 +826,6 @@
                 padding: 12px 16px;
             }
             .nav-bar .nav-links {
-                flex-wrap: wrap;
                 justify-content: center;
             }
         }
@@ -736,9 +855,7 @@
     <!-- ===== НАВИГАЦИЯ ===== -->
     <nav class="nav-bar">
         <div class="logo">Tele<span>Med</span></div>
-        <div class="nav-links" id="navLinks">
-            <!-- Контент навигации заполняется из JS -->
-        </div>
+        <div class="nav-links" id="navLinks"></div>
     </nav>
 
     <!-- ===== ПУБЛИЧНАЯ ЧАСТЬ ===== -->
@@ -747,38 +864,28 @@
             <h1>🩺 Найти врача</h1>
             <p>Ищите по ФИО, специализации или симптомам</p>
         </div>
-
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="Например: уролог, цистит, Иванов..." />
             <button onclick="searchDoctors()">Найти</button>
         </div>
-
         <div class="filter-bar" id="filterBar">
             <button class="active" data-filter="all" onclick="setFilter('all')">Все врачи</button>
             <button data-filter="verified" onclick="setFilter('verified')">✅ Проверенные</button>
         </div>
-
         <div id="doctorsContainer" class="doctors-grid">
             <div class="loading">Загрузка врачей...</div>
         </div>
-
-        <div class="admin-note">
-            🔐 Администратор: войдите в админ-панель для управления
-        </div>
+        <div class="admin-note">🔐 Администратор: войдите в админ-панель для управления</div>
     </div>
 
     <!-- ===== АДМИН-ПАНЕЛЬ ===== -->
     <div id="adminView" class="hidden">
-        <div class="admin-panel" id="adminPanel">
-            <!-- Заполняется из JS -->
-        </div>
+        <div class="admin-panel" id="adminPanel"></div>
     </div>
 
     <!-- ===== ЛИЧНЫЙ КАБИНЕТ ВРАЧА ===== -->
     <div id="doctorView" class="hidden">
-        <div class="doctor-cabinet" id="doctorCabinet">
-            <!-- Заполняется из JS -->
-        </div>
+        <div class="doctor-cabinet" id="doctorCabinet"></div>
     </div>
 
 </div>
@@ -848,8 +955,7 @@
     // 1. ДАННЫЕ
     // ================================================================
 
-    // ----- Врачи -----
-    const DOCTORS = [{
+    let DOCTORS = [{
         id: 1,
         full_name: "Иванов Сергей Петрович",
         specialization: "Врач-уролог",
@@ -883,512 +989,4 @@
         experience: 15,
         price: 2500,
         verified: false,
-        bio: "Терапевт с 15-летним стажем. Диагностика и лечение простудных заболеваний.",
-        video: "https://meet.jit.si/Therapist_Petrova",
-        schedule: ["08:00", "09:00", "10:00", "11:00", "12:00"],
-        login: "petrova",
-        password: "doc123"
-    }];
-
-    // ----- Администратор -----
-    const ADMIN = {
-        login: "admin",
-        password: "admin123"
-    };
-
-    // ----- Заявки (хранятся в памяти, потом можно сохранять) -----
-    let bookings = [];
-
-    // ================================================================
-    // 2. СОСТОЯНИЕ
-    // ================================================================
-
-    let currentUser = null; // null = пациент, 'admin' = админ, { doctor } = врач
-    let currentFilter = 'all';
-
-    // ================================================================
-    // 3. НАВИГАЦИЯ
-    // ================================================================
-
-    function renderNav() {
-        const nav = document.getElementById('navLinks');
-        let html = '';
-        if (currentUser === 'admin') {
-            html = `
-                <span class="user-badge">👩‍💼 Админ</span>
-                <button class="btn-admin" onclick="showView('admin')">📊 Панель</button>
-                <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
-            `;
-        } else if (currentUser && currentUser.login) {
-            html = `
-                <span class="user-badge">👨‍⚕️ ${currentUser.full_name}</span>
-                <button class="btn-admin" onclick="showView('doctor')">📋 Кабинет</button>
-                <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
-            `;
-        } else {
-            html = `
-                <button class="btn-login" onclick="openLoginModal()">🔐 Вход</button>
-            `;
-        }
-        nav.innerHTML = html;
-    }
-
-    // ================================================================
-    // 4. ПЕРЕКЛЮЧЕНИЕ ВИДОВ
-    // ================================================================
-
-    function showView(view) {
-        document.getElementById('publicView').classList.add('hidden');
-        document.getElementById('adminView').classList.add('hidden');
-        document.getElementById('doctorView').classList.add('hidden');
-
-        if (view === 'public') {
-            document.getElementById('publicView').classList.remove('hidden');
-            searchDoctors();
-        } else if (view === 'admin' && currentUser === 'admin') {
-            document.getElementById('adminView').classList.remove('hidden');
-            renderAdminPanel();
-        } else if (view === 'doctor' && currentUser && currentUser.login) {
-            document.getElementById('doctorView').classList.remove('hidden');
-            renderDoctorCabinet();
-        }
-        renderNav();
-    }
-
-    // ================================================================
-    // 5. ВХОД / ВЫХОД
-    // ================================================================
-
-    function openLoginModal() {
-        document.getElementById('loginModal').classList.add('active');
-        document.getElementById('loginError').classList.remove('active');
-        document.getElementById('loginForm').reset();
-    }
-
-    function closeLoginModal() {
-        document.getElementById('loginModal').classList.remove('active');
-    }
-
-    function login(e) {
-        e.preventDefault();
-        const username = document.getElementById('loginUsername').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
-
-        // Проверка админа
-        if (username === ADMIN.login && password === ADMIN.password) {
-            currentUser = 'admin';
-            closeLoginModal();
-            showView('admin');
-            return;
-        }
-
-        // Проверка врача
-        const doctor = DOCTORS.find(d => d.login === username && d.password === password);
-        if (doctor) {
-            currentUser = doctor;
-            closeLoginModal();
-            showView('doctor');
-            return;
-        }
-
-        document.getElementById('loginError').classList.add('active');
-    }
-
-    function logout() {
-        currentUser = null;
-        showView('public');
-        renderNav();
-    }
-
-    // ================================================================
-    // 6. ПОИСК И ФИЛЬТРАЦИЯ (ПУБЛИЧНАЯ ЧАСТЬ)
-    // ================================================================
-
-    function searchDoctors() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        const container = document.getElementById('doctorsContainer');
-
-        let results = DOCTORS;
-
-        if (currentFilter === 'verified') {
-            results = results.filter(doc => doc.verified === true);
-        }
-
-        if (query.length > 0) {
-            results = results.filter(doc => {
-                const fullName = doc.full_name.toLowerCase();
-                const spec = doc.specialization.toLowerCase();
-                const symptoms = doc.symptoms.map(s => s.toLowerCase()).join(' ');
-                return fullName.includes(query) || spec.includes(query) || symptoms.includes(query);
-            });
-        }
-
-        results.sort((a, b) => (a.verified === b.verified) ? 0 : a.verified ? -1 : 1);
-
-        renderDoctors(results);
-    }
-
-    function setFilter(filter) {
-        currentFilter = filter;
-        document.querySelectorAll('#filterBar button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.filter === filter);
-        });
-        searchDoctors();
-    }
-
-    // ================================================================
-    // 7. ОТРИСОВКА КАРТОЧЕК (ПУБЛИЧНАЯ)
-    // ================================================================
-
-    function renderDoctors(doctors) {
-        const container = document.getElementById('doctorsContainer');
-
-        if (doctors.length === 0) {
-            container.innerHTML = '<div class="no-results">👀 Врачей не найдено</div>';
-            return;
-        }
-
-        container.innerHTML = doctors.map(doc => {
-            const initials = doc.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-            const symptomsHtml = doc.symptoms.map(s => `<span>${s}</span>`).join(' ');
-            const verifiedBadge = doc.verified ? '<span class="verified-badge">✅ Проверен</span>' : '';
-            const slotsHtml = doc.schedule.map(time =>
-                `<div class="slot" onclick="openBooking('${doc.full_name}', '${time}')">🕐 ${time}</div>`
-            ).join('');
-
-            return `
-                <div class="doctor-card">
-                    <div class="avatar">${initials}</div>
-                    <h3>${doc.full_name} ${verifiedBadge}</h3>
-                    <div class="specialization">${doc.specialization}</div>
-                    <div class="symptoms">${symptomsHtml}</div>
-                    <div class="info-row">
-                        <span class="price">${doc.price} <small>сом</small></span>
-                        <span>Стаж ${doc.experience} лет</span>
-                    </div>
-                    <div style="margin-top:14px; border-top:1px solid #eef3f9; padding-top:12px;">
-                        <p style="font-size:13px; color:#5a6f88; margin-bottom:8px; font-weight:600;">📅 Доступное время:</p>
-                        <div style="display:flex; flex-wrap:wrap; gap:8px;">${slotsHtml}</div>
-                    </div>
-                    <div style="margin-top:14px;">
-                        <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">💬 Записаться</button>
-                    </div>
-                    ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
-                </div>
-            `;
-        }).join('');
-    }
-
-    // ================================================================
-    // 8. ЗАПИСЬ (МОДАЛЬНОЕ ОКНО)
-    // ================================================================
-
-    let selectedDoctor = '';
-    let selectedTime = '';
-
-    function openBooking(doctorName, time) {
-        selectedDoctor = doctorName;
-        selectedTime = time || 'не выбрано';
-        document.getElementById('modalDoctorInfo').textContent = `Врач: ${doctorName}`;
-        document.getElementById('modalTimeInfo').textContent = `Время: ${time || 'не выбрано'}`;
-        document.getElementById('bookingForm').reset();
-        document.getElementById('formContainer').style.display = 'block';
-        document.getElementById('formSuccess').classList.remove('active');
-        document.getElementById('formError').classList.remove('active');
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
-        document.getElementById('bookingModal').classList.add('active');
-    }
-
-    function closeModal() {
-        document.getElementById('bookingModal').classList.remove('active');
-    }
-
-    document.getElementById('bookingModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
-
-    function submitForm(e) {
-        e.preventDefault();
-        const name = document.getElementById('patientName').value.trim();
-        const phone = document.getElementById('patientPhone').value.trim();
-        const email = document.getElementById('patientEmail').value.trim();
-        const comment = document.getElementById('patientComment').value.trim();
-
-        if (!name || !phone) {
-            document.getElementById('formError').textContent = 'Пожалуйста, заполните имя и телефон';
-            document.getElementById('formError').classList.add('active');
-            return;
-        }
-
-        document.getElementById('formError').classList.remove('active');
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = '⏳ Отправка...';
-
-        // Сохраняем заявку
-        bookings.push({
-            id: Date.now(),
-            patientName: name,
-            phone: phone,
-            email: email,
-            comment: comment,
-            doctor: selectedDoctor,
-            time: selectedTime,
-            status: 'pending',
-            createdAt: new Date().toLocaleString()
-        });
-
-        // Показываем успех
-        document.getElementById('formContainer').style.display = 'none';
-        document.getElementById('formSuccess').classList.add('active');
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
-
-        // Если админ или врач залогинены — обновляем их панели
-        if (currentUser === 'admin') renderAdminPanel();
-        if (currentUser && currentUser.login) renderDoctorCabinet();
-    }
-
-    // ================================================================
-    // 9. АДМИН-ПАНЕЛЬ
-    // ================================================================
-
-    function renderAdminPanel() {
-        const panel = document.getElementById('adminPanel');
-
-        const totalDoctors = DOCTORS.length;
-        const verifiedDoctors = DOCTORS.filter(d => d.verified).length;
-        const totalBookings = bookings.length;
-        const pendingBookings = bookings.filter(b => b.status === 'pending').length;
-
-        let doctorsHtml = DOCTORS.map(d => `
-            <tr>
-                <td>${d.full_name}</td>
-                <td>${d.specialization}</td>
-                <td>${d.experience} лет</td>
-                <td>${d.price} сом</td>
-                <td>
-                    <span class="status-badge ${d.verified ? 'green' : 'yellow'}">
-                        ${d.verified ? '✅ Проверен' : '⏳ Ожидает'}
-                    </span>
-                </td>
-                <td>
-                    <div class="admin-actions">
-                        <button class="btn-verify" onclick="toggleVerify(${d.id})">
-                            ${d.verified ? '❌ Снять' : '✅ Подтвердить'}
-                        </button>
-                        <button class="btn-delete" onclick="deleteDoctor(${d.id})">🗑️</button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-
-        let bookingsHtml = bookings.map(b => `
-            <tr>
-                <td>${b.patientName}</td>
-                <td>${b.phone}</td>
-                <td>${b.doctor}</td>
-                <td>${b.time}</td>
-                <td>
-                    <span class="status-badge ${b.status === 'confirmed' ? 'green' : b.status === 'cancelled' ? 'red' : 'yellow'}">
-                        ${b.status === 'pending' ? '⏳ Ожидает' : b.status === 'confirmed' ? '✅ Подтверждена' : '❌ Отменена'}
-                    </span>
-                </td>
-                <td>
-                    <div class="admin-actions">
-                        <button class="btn-edit" onclick="updateBooking(${b.id}, 'confirmed')">✅</button>
-                        <button class="btn-delete" onclick="updateBooking(${b.id}, 'cancelled')">❌</button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-
-        panel.innerHTML = `
-            <h2>📊 Панель управления</h2>
-            <div class="admin-stats">
-                <div class="stat"><div class="number">${totalDoctors}</div><div class="label">Всего врачей</div></div>
-                <div class="stat"><div class="number">${verifiedDoctors}</div><div class="label">Проверенных</div></div>
-                <div class="stat"><div class="number">${totalBookings}</div><div class="label">Всего заявок</div></div>
-                <div class="stat"><div class="number">${pendingBookings}</div><div class="label">Ожидают</div></div>
-            </div>
-
-            <h3 style="margin-top:24px;">👨‍⚕️ Врачи</h3>
-            <button class="admin-add-btn" onclick="addDoctor()">➕ Добавить врача</button>
-            <table class="admin-table">
-                <thead><tr><th>ФИО</th><th>Специализация</th><th>Стаж</th><th>Цена</th><th>Статус</th><th>Действия</th></tr></thead>
-                <tbody>${doctorsHtml}</tbody>
-            </table>
-
-            <h3 style="margin-top:24px;">📋 Заявки</h3>
-            <table class="admin-table">
-                <thead><tr><th>Пациент</th><th>Телефон</th><th>Врач</th><th>Время</th><th>Статус</th><th>Действия</th></tr></thead>
-                <tbody>${bookingsHtml || '<tr><td colspan="6">Нет заявок</td></tr>'}</tbody>
-            </table>
-        `;
-    }
-
-    // ================================================================
-    // 10. АДМИН-ДЕЙСТВИЯ
-    // ================================================================
-
-    function toggleVerify(id) {
-        const doctor = DOCTORS.find(d => d.id === id);
-        if (doctor) {
-            doctor.verified = !doctor.verified;
-            renderAdminPanel();
-            if (!document.getElementById('adminView').classList.contains('hidden')) {
-                // обновляем публичный вид если он активен
-                searchDoctors();
-            }
-        }
-    }
-
-    function deleteDoctor(id) {
-        if (confirm('Удалить врача?')) {
-            const index = DOCTORS.findIndex(d => d.id === id);
-            if (index !== -1) {
-                DOCTORS.splice(index, 1);
-                renderAdminPanel();
-                if (!document.getElementById('publicView').classList.contains('hidden')) {
-                    searchDoctors();
-                }
-            }
-        }
-    }
-
-    function addDoctor() {
-        const name = prompt('Введите ФИО врача:');
-        if (!name) return;
-        const spec = prompt('Введите специализацию:');
-        if (!spec) return;
-        const price = parseInt(prompt('Введите цену (сом):')) || 3000;
-        const exp = parseInt(prompt('Введите стаж (лет):')) || 10;
-
-        DOCTORS.push({
-            id: Date.now(),
-            full_name: name,
-            specialization: spec,
-            symptoms: ['введите симптомы'],
-            experience: exp,
-            price: price,
-            verified: false,
-            bio: '',
-            video: `https://meet.jit.si/Doctor_${Date.now()}`,
-            schedule: ['10:00', '11:00', '12:00'],
-            login: name.toLowerCase().replace(/\s/g, ''),
-            password: 'doc123'
-        });
-        renderAdminPanel();
-        searchDoctors();
-        alert('✅ Врач добавлен! Логин: ' + name.toLowerCase().replace(/\s/g, '') + ', пароль: doc123');
-    }
-
-    function updateBooking(id, status) {
-        const booking = bookings.find(b => b.id === id);
-        if (booking) {
-            booking.status = status;
-            renderAdminPanel();
-            if (currentUser && currentUser.login) renderDoctorCabinet();
-        }
-    }
-
-    // ================================================================
-    // 11. ЛИЧНЫЙ КАБИНЕТ ВРАЧА
-    // ================================================================
-
-    function renderDoctorCabinet() {
-        if (!currentUser || !currentUser.login) return;
-        const doc = currentUser;
-        const cabinet = document.getElementById('doctorCabinet');
-
-        const myBookings = bookings.filter(b => b.doctor === doc.full_name);
-
-        let patientsHtml = myBookings.map(b => `
-            <li>
-                <span class="patient-name">${b.patientName}</span>
-                <span class="patient-time">${b.time} (${b.status === 'pending' ? '⏳ ожидает' : '✅ подтверждена'})</span>
-            </li>
-        `).join('') || '<li style="color:#7a8fa5;">Пока нет записей</li>';
-
-        cabinet.innerHTML = `
-            <div class="cabinet-header">
-                <div>
-                    <h2>👨‍⚕️ ${doc.full_name}</h2>
-                    <p style="color:#5a6f88;">${doc.specialization} · Стаж ${doc.experience} лет</p>
-                </div>
-                <span class="status ${doc.verified ? 'verified' : 'pending'}">
-                    ${doc.verified ? '✅ Документы проверены' : '⏳ Ожидает проверки'}
-                </span>
-            </div>
-
-            <div class="cabinet-grid">
-                <div class="card">
-                    <h4>📋 Моя карточка</h4>
-                    <div class="info-item"><span class="label">ФИО</span><span class="value">${doc.full_name}</span></div>
-                    <div class="info-item"><span class="label">Специализация</span><span class="value">${doc.specialization}</span></div>
-                    <div class="info-item"><span class="label">Стаж</span><span class="value">${doc.experience} лет</span></div>
-                    <div class="info-item"><span class="label">Цена</span><span class="value">${doc.price} сом</span></div>
-                    <div class="info-item"><span class="label">Статус</span><span class="value">${doc.verified ? '✅ Проверен' : '⏳ Ожидает'}</span></div>
-                </div>
-
-                <div class="card">
-                    <h4>📅 Моё расписание</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                        ${doc.schedule.map(t => `<span class="slot" style="background:#eef3f9;color:#0b2b4a;cursor:default;">🕐 ${t}</span>`).join('')}
-                    </div>
-                    <p style="font-size:12px;color:#7a8fa5;margin-top:8px;">✏️ Для изменения расписания обратитесь к администратору</p>
-                </div>
-
-                <div class="card">
-                    <h4>📹 Видеозвонок</h4>
-                    <p style="font-size:14px;color:#5a6f88;margin-bottom:8px;">Ваша персональная комната для приёма пациентов:</p>
-                    <a href="${doc.video}" target="_blank" class="video-link">🎥 Открыть видеозвонок</a>
-                    <p style="font-size:12px;color:#7a8fa5;margin-top:6px;">Скопируйте эту ссылку и отправьте пациенту после подтверждения записи</p>
-                    <div style="background:#f8fafc;padding:8px 12px;border-radius:12px;font-size:13px;color:#0b2b4a;word-break:break-all;margin-top:8px;">${doc.video}</div>
-                </div>
-
-                <div class="card">
-                    <h4>📋 Мои пациенты (${myBookings.length})</h4>
-                    <ul class="patient-list">${patientsHtml}</ul>
-                </div>
-            </div>
-
-            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eef3f9;display:flex;gap:12px;flex-wrap:wrap;">
-                <a href="https://telemed.kg" target="_blank" class="btn-chat" style="background:#eef3f9;color:#0b2b4a;">👁️ Посмотреть свой профиль</a>
-                <button onclick="logout()" class="btn-danger">🚪 Выйти</button>
-            </div>
-        `;
-    }
-
-    // ================================================================
-    // 12. ЗАГРУЗКА ПРИ СТАРТЕ
-    // ================================================================
-
-    document.addEventListener('DOMContentLoaded', () => {
-        renderNav();
-        showView('public');
-
-        // Поиск по Enter
-        document.getElementById('searchInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') searchDoctors();
-        });
-
-        // Закрытие модалки логина по клику вне
-        document.getElementById('loginModal').addEventListener('click', function(e) {
-            if (e.target === this) closeLoginModal();
-        });
-    });
-
-    // ================================================================
-    // 13. ЗАЩИТА ОТ НЕСАНКЦИОНИРОВАННОГО ДОСТУПА
-    // ================================================================
-
-    // Если кто-то пытается открыть админку или кабинет без входа — перекидываем на публичную часть
-    window.addEventListener('hashchange', () => {
-        if (!currentUser) {
-            showView('public');
-        }
-    });
-</script>
-</body>
-</html>
+        bio: "Терапевт с 15-летним стажем. Диагностика и лечение простудных
