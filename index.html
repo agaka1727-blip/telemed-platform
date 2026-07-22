@@ -202,15 +202,6 @@
             background: #1558b0;
             transform: scale(1.02);
         }
-        .slot.booked {
-            background: #ccc;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .slot.booked:hover {
-            transform: none;
-            background: #ccc;
-        }
         .loading {
             text-align: center;
             color: #7a8fa5;
@@ -252,6 +243,133 @@
             font-size: 13px;
             color: #9aafc4;
         }
+
+        /* ===== МОДАЛЬНОЕ ОКНО (ФОРМА) ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 480px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+        .modal-content h2 {
+            font-size: 24px;
+            color: #0b2b4a;
+            margin-bottom: 4px;
+        }
+        .modal-content .sub {
+            color: #5a6f88;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .modal-content .close {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9aafc4;
+            background: none;
+            border: none;
+        }
+        .modal-content .close:hover {
+            color: #0b2b4a;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: #0b2b4a;
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e8edf3;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-submit:hover {
+            background: #1558b0;
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .form-success {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+        .form-success.active {
+            display: block;
+        }
+        .form-success .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .form-success h3 {
+            color: #1e7e34;
+            margin-bottom: 4px;
+        }
+        .form-success p {
+            color: #5a6f88;
+            font-size: 14px;
+        }
+        .form-error {
+            color: #d93025;
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+        }
+        .form-error.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -281,11 +399,54 @@
     </div>
 </div>
 
+<!-- ===== МОДАЛЬНОЕ ОКНО С ФОРМОЙ ===== -->
+<div class="modal" id="bookingModal">
+    <div class="modal-content">
+        <button class="close" onclick="closeModal()">✕</button>
+
+        <!-- Форма -->
+        <div id="formContainer">
+            <h2>📋 Запись на консультацию</h2>
+            <p class="sub" id="modalDoctorInfo">Врач: Иванов Сергей Петрович</p>
+            <p class="sub" id="modalTimeInfo">Время: 10:00</p>
+
+            <form id="bookingForm" onsubmit="submitForm(event)">
+                <div class="form-group">
+                    <label>Ваше имя *</label>
+                    <input type="text" id="patientName" placeholder="Например: Алексей" required />
+                </div>
+                <div class="form-group">
+                    <label>Телефон *</label>
+                    <input type="tel" id="patientPhone" placeholder="+996 700 123 456" required />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="patientEmail" placeholder="alex@example.com" />
+                </div>
+                <div class="form-group">
+                    <label>Комментарий</label>
+                    <textarea id="patientComment" placeholder="Опишите ваш вопрос к врачу..."></textarea>
+                </div>
+
+                <div class="form-error" id="formError">Пожалуйста, заполните все обязательные поля</div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">📩 Отправить заявку</button>
+            </form>
+        </div>
+
+        <!-- Успех -->
+        <div class="form-success" id="formSuccess">
+            <div class="icon">✅</div>
+            <h3>Заявка отправлена!</h3>
+            <p>Мы свяжемся с вами в ближайшее время для подтверждения записи.</p>
+            <button class="btn-submit" style="margin-top:16px;" onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ============================================================
     // 1. БАЗА ДАННЫХ ВРАЧЕЙ (ДОБАВЛЯЙТЕ ВРАЧЕЙ СЮДА!)
-    //    Чтобы добавить нового врача, скопируйте { ... } и вставьте
-    //    через запятую в массив DOCTORS
     // ============================================================
     const DOCTORS = [
         {
@@ -324,24 +485,119 @@
     ];
 
     // ============================================================
-    // 2. ФУНКЦИЯ ЗАПИСИ НА ПРИЁМ
-    //    НОМЕР ТЕЛЕФОНА УЖЕ ВСТАВЛЕН: +996552910846
+    // 2. ПЕРЕМЕННЫЕ ДЛЯ ФОРМЫ
     // ============================================================
-    function bookSlot(doctorName, time) {
-        const phone = '996552910846';  // ВАШ НОМЕР
+    let selectedDoctor = '';
+    let selectedTime = '';
 
-        let message = `Здравствуйте! Я хочу записаться к врачу: ${doctorName}`;
-        if (time) {
-            message += ` на ${time}`;
+    // ============================================================
+    // 3. ОТКРЫТЬ ФОРМУ
+    // ============================================================
+    function openBooking(doctorName, time) {
+        selectedDoctor = doctorName;
+        selectedTime = time || 'не выбрано';
+
+        document.getElementById('modalDoctorInfo').textContent = `Врач: ${doctorName}`;
+        document.getElementById('modalTimeInfo').textContent = `Время: ${time || 'не выбрано'}`;
+
+        // Сброс формы
+        document.getElementById('bookingForm').reset();
+        document.getElementById('formContainer').style.display = 'block';
+        document.getElementById('formSuccess').classList.remove('active');
+        document.getElementById('formError').classList.remove('active');
+        document.getElementById('submitBtn').disabled = false;
+
+        document.getElementById('bookingModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('bookingModal').classList.remove('active');
+    }
+
+    // Закрытие по клику вне модалки
+    document.getElementById('bookingModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // ============================================================
+    // 4. ОТПРАВКА ФОРМЫ
+    // ============================================================
+    function submitForm(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('patientName').value.trim();
+        const phone = document.getElementById('patientPhone').value.trim();
+        const email = document.getElementById('patientEmail').value.trim();
+        const comment = document.getElementById('patientComment').value.trim();
+
+        if (!name || !phone) {
+            document.getElementById('formError').textContent = 'Пожалуйста, заполните имя и телефон';
+            document.getElementById('formError').classList.add('active');
+            return;
         }
-        message += '. Благодарю!';
 
-        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
+        document.getElementById('formError').classList.remove('active');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').textContent = '⏳ Отправка...';
+
+        // ============================================================
+        // 🔵 ЗДЕСЬ НАСТРОЙТЕ ПОЛУЧЕНИЕ ЗАЯВОК
+        // ============================================================
+
+        // --- ВАРИАНТ 1: Telegram (рекомендуется) ---
+        // 1. Создайте бота у @BotFather
+        // 2. Замените BOT_TOKEN и CHAT_ID ниже
+        /*
+        const BOT_TOKEN = 'ВАШ_ТОКЕН';
+        const CHAT_ID = 'ВАШ_CHAT_ID';
+        const message = `📋 Новая заявка на запись!
+        👤 Имя: ${name}
+        📞 Телефон: ${phone}
+        📧 Email: ${email || 'не указан'}
+        👨‍⚕️ Врач: ${selectedDoctor}
+        🕐 Время: ${selectedTime}
+        💬 Комментарий: ${comment || 'нет'}`;
+
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: CHAT_ID, text: message })
+        })
+        .then(() => showSuccess())
+        .catch(() => showError());
+        */
+
+        // --- ВАРИАНТ 2: Просто показать успех (для теста) ---
+        // Показываем сообщение об успехе (для теста)
+        showSuccess();
+
+        // --- ВАРИАНТ 3: Отправка на email (через FormSubmit.co) ---
+        // Раскомментируйте, если хотите отправлять на почту
+        /*
+        const form = document.getElementById('bookingForm');
+        const action = 'https://formsubmit.co/ВАША_ПОЧТА@gmail.com';
+        form.action = action;
+        form.method = 'POST';
+        form.submit();
+        */
+    }
+
+    function showSuccess() {
+        document.getElementById('formContainer').style.display = 'none';
+        document.getElementById('formSuccess').classList.add('active');
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
+    }
+
+    function showError() {
+        document.getElementById('formError').textContent = 'Ошибка отправки. Попробуйте позже или напишите нам в WhatsApp';
+        document.getElementById('formError').classList.add('active');
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
     }
 
     // ============================================================
-    // 3. ПОИСК И ФИЛЬТРАЦИЯ (НЕ ТРОГАЙТЕ)
+    // 5. ПОИСК И ФИЛЬТРАЦИЯ
     // ============================================================
     let currentFilter = 'all';
 
@@ -378,7 +634,7 @@
     }
 
     // ============================================================
-    // 4. ОТРИСОВКА КАРТОЧЕК (НЕ ТРОГАЙТЕ)
+    // 6. ОТРИСОВКА КАРТОЧЕК
     // ============================================================
     function renderDoctors(doctors) {
         const container = document.getElementById('doctorsContainer');
@@ -410,7 +666,7 @@
             let slotsHtml = '';
             if (doc.schedule && Array.isArray(doc.schedule)) {
                 slotsHtml = doc.schedule.map(time => `
-                    <div class="slot" onclick="bookSlot('${doc.full_name}', '${time}')">
+                    <div class="slot" onclick="openBooking('${doc.full_name}', '${time}')">
                         🕐 ${time}
                     </div>
                 `).join('');
@@ -439,7 +695,7 @@
                     </div>
 
                     <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-                        <button onclick="bookSlot('${doc.full_name}', '')" class="btn-chat">
+                        <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">
                             💬 Записаться
                         </button>
                         <a href="${videoLink}" target="_blank" class="btn-call">📹 Видеозвонок</a>
@@ -452,7 +708,7 @@
     }
 
     // ============================================================
-    // 5. ЗАГРУЗКА ПРИ СТАРТЕ
+    // 7. ЗАГРУЗКА ПРИ СТАРТЕ
     // ============================================================
     document.addEventListener('DOMContentLoaded', () => {
         searchDoctors();
