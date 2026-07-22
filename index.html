@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TeleMed — Поиск врачей</title>
     <style>
-        /* ===== БАЗОВЫЕ СТИЛИ (сокращены для экономии места) ===== */
+        /* ===== БАЗОВЫЕ СТИЛИ (ПОЛНАЯ ВЕРСИЯ) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -101,6 +101,13 @@
             border-radius: 30px;
             font-size: 13px;
             font-weight: 600;
+        }
+        .nav-bar .nav-links .btn-register {
+            background: #0b2b4a;
+            color: white;
+        }
+        .nav-bar .nav-links .btn-register:hover {
+            background: #1a3d5e;
         }
         .search-box {
             background: white;
@@ -351,7 +358,7 @@
             background: white;
             border-radius: 24px;
             padding: 32px;
-            max-width: 520px;
+            max-width: 600px;
             width: 100%;
             position: relative;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
@@ -418,6 +425,11 @@
         .form-group textarea {
             resize: vertical;
             min-height: 60px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
         }
         .btn-submit {
             width: 100%;
@@ -574,18 +586,6 @@
         }
         .admin-actions .btn-reject:hover {
             background: #f5c2c2;
-        }
-        .admin-actions .btn-view-doc {
-            background: #eef3f9;
-            color: #0b2b4a;
-            text-decoration: none;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: inline-block;
-        }
-        .admin-actions .btn-view-doc:hover {
-            background: #dce4ed;
         }
         .admin-add-btn {
             background: #1a73e8;
@@ -885,11 +885,6 @@
             background: #f8fafc;
             cursor: pointer;
         }
-        .doctor-cabinet .edit-profile-section .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
         .doctor-cabinet .edit-profile-section .file-preview {
             margin-top: 8px;
             padding: 8px 12px;
@@ -959,7 +954,7 @@
             color: #b91c1c;
         }
         .register-container {
-            max-width: 500px;
+            max-width: 600px;
             margin: 40px auto;
             background: white;
             border-radius: 24px;
@@ -993,19 +988,20 @@
             margin-top: 8px;
             border: 2px solid #e8edf3;
         }
-        .moderation-doc {
-            display: inline-block;
-            padding: 2px 10px;
-            background: #eef3f9;
-            border-radius: 12px;
-            font-size: 12px;
-            margin: 2px 4px 2px 0;
-        }
-        .moderation-doc a {
+        .forgot-link {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
             color: #1a73e8;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
             text-decoration: none;
+            background: none;
+            border: none;
+            font-family: inherit;
         }
-        .moderation-doc a:hover {
+        .forgot-link:hover {
             text-decoration: underline;
         }
         @media (max-width: 768px) {
@@ -1028,6 +1024,13 @@
             .nav-bar .nav-links {
                 justify-content: center;
             }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
+            }
         }
         @media (max-width: 480px) {
             .admin-stats {
@@ -1044,10 +1047,6 @@
             .search-box button {
                 width: 100%;
                 justify-content: center;
-            }
-            .modal-content {
-                padding: 20px;
-                margin: 10px;
             }
         }
     </style>
@@ -1120,7 +1119,37 @@
             <div class="form-group"><label>Пароль</label><input type="password" id="loginPassword" placeholder="Введите пароль" required /></div>
             <div class="form-error" id="loginError">Неверный логин или пароль</div>
             <button type="submit" class="btn-submit">Войти</button>
+            <button type="button" class="forgot-link" onclick="openForgotPassword()">🔑 Забыли пароль?</button>
         </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО (ВОССТАНОВЛЕНИЕ ПАРОЛЯ) ===== -->
+<div class="modal" id="forgotModal">
+    <div class="modal-content" style="max-width:400px;">
+        <button class="close" onclick="closeForgotModal()">✕</button>
+        <h2>🔑 Восстановление пароля</h2>
+        <p class="sub">Введите логин, чтобы получить подсказку</p>
+        <div id="forgotStep1">
+            <div class="form-group">
+                <label>Ваш логин</label>
+                <input type="text" id="forgotLogin" placeholder="Введите логин" />
+            </div>
+            <button class="btn-submit" onclick="checkSecretQuestion()">Далее</button>
+        </div>
+        <div id="forgotStep2" style="display:none;">
+            <div class="form-group">
+                <label>Секретный вопрос</label>
+                <p id="forgotQuestion" style="padding:10px;background:#f0f4f9;border-radius:12px;font-weight:500;"></p>
+            </div>
+            <div class="form-group">
+                <label>Ваш ответ</label>
+                <input type="text" id="forgotAnswer" placeholder="Введите ответ" />
+            </div>
+            <button class="btn-submit" onclick="checkAnswer()">Восстановить пароль</button>
+            <button type="button" class="forgot-link" onclick="backToLogin()">← Назад ко входу</button>
+        </div>
+        <div id="forgotResult" style="display:none;text-align:center;padding:20px 0;"></div>
     </div>
 </div>
 
@@ -1135,7 +1164,7 @@
 
 <script>
     // ================================================================
-    // 1. ДАННЫЕ
+    // 1. ДАННЫЕ (с секретным вопросом)
     // ================================================================
 
     let DOCTORS = [{
@@ -1155,7 +1184,9 @@
         diploma: "",
         certificate: "",
         qualification: "",
-        moderationComment: ""
+        moderationComment: "",
+        secretQuestion: "Кличка вашего первого питомца?",
+        secretAnswer: "шарик"
     }, {
         id: 2,
         full_name: "Сариева Алия",
@@ -1173,7 +1204,9 @@
         diploma: "",
         certificate: "",
         qualification: "",
-        moderationComment: ""
+        moderationComment: "",
+        secretQuestion: "Ваш любимый город?",
+        secretAnswer: "бишкек"
     }, {
         id: 3,
         full_name: "Петрова Елена Викторовна",
@@ -1191,7 +1224,9 @@
         diploma: "",
         certificate: "",
         qualification: "",
-        moderationComment: ""
+        moderationComment: "",
+        secretQuestion: "Ваша любимая книга?",
+        secretAnswer: "войнаимир"
     }];
 
     const ADMIN = { login: "admin", password: "admin123" };
@@ -1209,6 +1244,7 @@
     let tempEditDiploma = '';
     let tempEditCertificate = '';
     let tempEditQualification = '';
+    let forgotDoctorId = null;
 
     // ================================================================
     // 2. ГЕНЕРАЦИЯ ТОКЕНА
@@ -1238,9 +1274,17 @@
                 <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
             `;
         } else {
-            html = `<button class="btn-login" onclick="openLoginModal()">🔐 Вход</button>`;
+            html = `
+                <button class="btn-login" onclick="openLoginModal()">🔐 Вход</button>
+                <button class="btn-register" onclick="openRegister()">👨‍⚕️ Регистрация</button>
+            `;
         }
         nav.innerHTML = html;
+    }
+
+    function openRegister() {
+        inviteToken = null;
+        showView('register');
     }
 
     // ================================================================
@@ -1270,7 +1314,7 @@
     }
 
     // ================================================================
-    // 5. ВХОД / ВЫХОД
+    // 5. ВХОД / ВЫХОД / ВОССТАНОВЛЕНИЕ
     // ================================================================
 
     function openLoginModal() {
@@ -1312,13 +1356,68 @@
     }
 
     // ================================================================
-    // 6. РЕГИСТРАЦИЯ ВРАЧА
+    // 6. ВОССТАНОВЛЕНИЕ ПАРОЛЯ
     // ================================================================
 
-    function openRegister(token) {
-        inviteToken = token;
-        showView('register');
+    function openForgotPassword() {
+        document.getElementById('forgotModal').classList.add('active');
+        document.getElementById('forgotStep1').style.display = 'block';
+        document.getElementById('forgotStep2').style.display = 'none';
+        document.getElementById('forgotResult').style.display = 'none';
+        document.getElementById('forgotLogin').value = '';
+        document.getElementById('forgotAnswer').value = '';
+        forgotDoctorId = null;
     }
+
+    function closeForgotModal() {
+        document.getElementById('forgotModal').classList.remove('active');
+    }
+
+    function backToLogin() {
+        closeForgotModal();
+        openLoginModal();
+    }
+
+    function checkSecretQuestion() {
+        const login = document.getElementById('forgotLogin').value.trim();
+        const doctor = DOCTORS.find(d => d.login === login);
+        if (!doctor) {
+            alert('❌ Врач с таким логином не найден');
+            return;
+        }
+        forgotDoctorId = doctor.id;
+        document.getElementById('forgotQuestion').textContent = doctor.secretQuestion || 'Вопрос не задан';
+        document.getElementById('forgotStep1').style.display = 'none';
+        document.getElementById('forgotStep2').style.display = 'block';
+    }
+
+    function checkAnswer() {
+        if (forgotDoctorId === null) return;
+        const doctor = DOCTORS.find(d => d.id === forgotDoctorId);
+        if (!doctor) return;
+        const answer = document.getElementById('forgotAnswer').value.trim().toLowerCase();
+        const correctAnswer = (doctor.secretAnswer || '').toLowerCase();
+
+        if (answer === correctAnswer) {
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotResult').style.display = 'block';
+            document.getElementById('forgotResult').innerHTML = `
+                <div style="background:#e6f7e6;padding:16px;border-radius:12px;">
+                    <div style="font-size:48px;">🔑</div>
+                    <h3 style="color:#1e7e34;">Ваш пароль:</h3>
+                    <p style="font-size:24px;font-weight:700;color:#0b2b4a;margin:8px 0;">${doctor.password}</p>
+                    <p style="color:#5a6f88;font-size:14px;">Рекомендуем сменить пароль в личном кабинете</p>
+                    <button class="btn-submit" style="margin-top:12px;" onclick="closeForgotModal()">Закрыть</button>
+                </div>
+            `;
+        } else {
+            alert('❌ Неверный ответ на секретный вопрос. Попробуйте ещё раз.');
+        }
+    }
+
+    // ================================================================
+    // 7. РЕГИСТРАЦИЯ ВРАЧА (с секретным вопросом)
+    // ================================================================
 
     function renderRegisterForm() {
         const container = document.getElementById('registerContainer');
@@ -1329,7 +1428,7 @@
         container.innerHTML = `
             <h2>📝 Регистрация врача</h2>
             <p class="sub">Заполните анкету, чтобы попасть на платформу TeleMed</p>
-            <div class="invite-badge">🔑 Приглашение: ${inviteToken || 'от администратора'}</div>
+            ${inviteToken ? `<div class="invite-badge">🔑 Приглашение: ${inviteToken}</div>` : ''}
             <form id="registerForm" onsubmit="registerDoctor(event)">
                 <div class="form-row">
                     <div class="form-group">
@@ -1365,8 +1464,8 @@
                     <div id="regPhotoPreview"></div>
                 </div>
                 <div class="form-group">
-                    <label>🎓 Диплом (PDF или изображение)</label>
-                    <input type="file" id="regDiploma" accept=".pdf,image/*" onchange="previewRegDiploma(event)" />
+                    <label>🎓 Диплом (PDF или изображение) *</label>
+                    <input type="file" id="regDiploma" accept=".pdf,image/*" onchange="previewRegDiploma(event)" required />
                     <div id="regDiplomaPreview"></div>
                 </div>
                 <div class="form-group">
@@ -1381,12 +1480,22 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Придумайте логин *</label>
+                        <label>Логин *</label>
                         <input type="text" id="regLogin" placeholder="ivanov" required />
                     </div>
                     <div class="form-group">
                         <label>Пароль *</label>
                         <input type="text" id="regPassword" placeholder="придумайте пароль" required />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Секретный вопрос *</label>
+                        <input type="text" id="regSecretQuestion" placeholder="Кличка вашего первого питомца?" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Ответ на секретный вопрос *</label>
+                        <input type="text" id="regSecretAnswer" placeholder="шарик" required />
                     </div>
                 </div>
                 <div class="form-error" id="regError">Пожалуйста, заполните все поля</div>
@@ -1456,8 +1565,10 @@
         const symptomsRaw = document.getElementById('regSymptoms').value.trim();
         const login = document.getElementById('regLogin').value.trim();
         const password = document.getElementById('regPassword').value.trim();
+        const secretQuestion = document.getElementById('regSecretQuestion').value.trim();
+        const secretAnswer = document.getElementById('regSecretAnswer').value.trim();
 
-        if (!fullName || !specialization || !experience || !price || !symptomsRaw || !login || !password) {
+        if (!fullName || !specialization || !experience || !price || !symptomsRaw || !login || !password || !secretQuestion || !secretAnswer) {
             document.getElementById('regError').textContent = 'Пожалуйста, заполните все поля';
             document.getElementById('regError').classList.add('active');
             return;
@@ -1488,7 +1599,9 @@
             diploma: tempDiplomaBase64 || '',
             certificate: tempCertificateBase64 || '',
             qualification: tempQualificationBase64 || '',
-            moderationComment: ''
+            moderationComment: '',
+            secretQuestion: secretQuestion,
+            secretAnswer: secretAnswer.toLowerCase()
         };
 
         DOCTORS.push(newDoctor);
@@ -1517,13 +1630,12 @@
     }
 
     // ================================================================
-    // 7. АДМИН-ПАНЕЛЬ С МОДЕРАЦИЕЙ
+    // 8. АДМИН-ПАНЕЛЬ
     // ================================================================
 
     function renderAdminPanel() {
         const panel = document.getElementById('adminPanel');
 
-        // Фильтруем врачей по статусу модерации
         let filteredDoctors = DOCTORS;
         if (adminFilter === 'pending') {
             filteredDoctors = DOCTORS.filter(d => !d.verified);
@@ -1538,7 +1650,6 @@
         const pendingBookings = bookings.filter(b => b.status === 'pending').length;
 
         let doctorsHtml = filteredDoctors.map(d => {
-            const hasDocs = d.diploma || d.certificate || d.qualification;
             return `
             <tr>
                 <td><strong>${d.full_name}</strong></td>
@@ -1623,8 +1734,21 @@
         renderAdminPanel();
     }
 
+    function inviteDoctor() {
+        const token = generateToken();
+        const inviteLink = `https://telemed.kg/?register=${token}`;
+        const input = document.createElement('input');
+        input.value = inviteLink;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        alert('✅ Ссылка-приглашение скопирована! Отправьте её врачу.\n\n' + inviteLink);
+        openRegister();
+    }
+
     // ================================================================
-    // 8. МОДЕРАЦИЯ ВРАЧА
+    // 9. МОДЕРАЦИЯ
     // ================================================================
 
     function openModeration(id) {
@@ -1722,21 +1846,8 @@
     }
 
     // ================================================================
-    // 9. ОСТАЛЬНЫЕ ФУНКЦИИ (ПРИГЛАШЕНИЕ, ДОБАВЛЕНИЕ, УДАЛЕНИЕ)
+    // 10. ОСТАЛЬНЫЕ ФУНКЦИИ (АДМИН, КАБИНЕТ, ПОИСК)
     // ================================================================
-
-    function inviteDoctor() {
-        const token = generateToken();
-        const inviteLink = `https://telemed.kg/?register=${token}`;
-        const input = document.createElement('input');
-        input.value = inviteLink;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-        alert('✅ Ссылка-приглашение скопирована! Отправьте её врачу.\n\n' + inviteLink);
-        openRegister(token);
-    }
 
     function toggleVerify(id) {
         const doctor = DOCTORS.find(d => d.id === id);
@@ -1772,6 +1883,8 @@
         const exp = parseInt(prompt('Введите стаж (лет):')) || 10;
         const login = prompt('Введите логин:') || name.toLowerCase().replace(/\s/g, '');
         const password = prompt('Введите пароль:') || 'doc123';
+        const secretQ = prompt('Секретный вопрос:') || 'Кличка вашего питомца?';
+        const secretA = prompt('Ответ на секретный вопрос:') || 'неизвестно';
         DOCTORS.push({
             id: Date.now(),
             full_name: name,
@@ -1789,7 +1902,9 @@
             diploma: '',
             certificate: '',
             qualification: '',
-            moderationComment: ''
+            moderationComment: '',
+            secretQuestion: secretQ,
+            secretAnswer: secretA.toLowerCase()
         });
         renderAdminPanel();
         searchDoctors();
@@ -1806,7 +1921,135 @@
     }
 
     // ================================================================
-    // 10. КАБИНЕТ ВРАЧА (с отображением статуса модерации)
+    // 11. ПОИСК И ОТРИСОВКА (ПУБЛИЧНАЯ ЧАСТЬ)
+    // ================================================================
+
+    function searchDoctors() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const container = document.getElementById('doctorsContainer');
+        let results = DOCTORS;
+        if (currentFilter === 'verified') results = results.filter(d => d.verified);
+        if (query) {
+            results = results.filter(d => {
+                const fullName = d.full_name.toLowerCase();
+                const spec = d.specialization.toLowerCase();
+                const symptoms = d.symptoms.map(s => s.toLowerCase()).join(' ');
+                return fullName.includes(query) || spec.includes(query) || symptoms.includes(query);
+            });
+        }
+        results.sort((a, b) => (a.verified === b.verified) ? 0 : a.verified ? -1 : 1);
+        renderDoctors(results);
+    }
+
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('#filterBar button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        searchDoctors();
+    }
+
+    function renderDoctors(doctors) {
+        const container = document.getElementById('doctorsContainer');
+        if (!doctors.length) {
+            container.innerHTML = '<div class="no-results">👀 Врачей не найдено</div>';
+            return;
+        }
+        container.innerHTML = doctors.map(doc => {
+            const avatarHtml = doc.photo ?
+                `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;" />` :
+                doc.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            const symptomsHtml = doc.symptoms.map(s => `<span>${s}</span>`).join(' ');
+            const verifiedBadge = doc.verified ? '<span class="verified-badge">✅ Проверен</span>' : '';
+            const slotsHtml = doc.schedule.map(time =>
+                `<div class="slot" onclick="openBooking('${doc.full_name}', '${time}')">🕐 ${time}</div>`
+            ).join('');
+            return `
+                <div class="doctor-card">
+                    <div class="avatar">${avatarHtml}</div>
+                    <h3>${doc.full_name} ${verifiedBadge}</h3>
+                    <div class="specialization">${doc.specialization}</div>
+                    <div class="symptoms">${symptomsHtml}</div>
+                    <div class="info-row">
+                        <span class="price">${doc.price} <small>сом</small></span>
+                        <span>Стаж ${doc.experience} лет</span>
+                    </div>
+                    <div style="margin-top:14px; border-top:1px solid #eef3f9; padding-top:12px;">
+                        <p style="font-size:13px; color:#5a6f88; margin-bottom:8px; font-weight:600;">📅 Доступное время:</p>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;">${slotsHtml}</div>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">💬 Записаться</button>
+                    </div>
+                    ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ================================================================
+    // 12. ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
+    // ================================================================
+
+    let selectedDoctor = '';
+    let selectedTime = '';
+
+    function openBooking(doctorName, time) {
+        selectedDoctor = doctorName;
+        selectedTime = time || 'не выбрано';
+        document.getElementById('modalDoctorInfo').textContent = `Врач: ${doctorName}`;
+        document.getElementById('modalTimeInfo').textContent = `Время: ${time || 'не выбрано'}`;
+        document.getElementById('bookingForm').reset();
+        document.getElementById('formContainer').style.display = 'block';
+        document.getElementById('formSuccess').classList.remove('active');
+        document.getElementById('formError').classList.remove('active');
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
+        document.getElementById('bookingModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('bookingModal').classList.remove('active');
+    }
+    document.getElementById('bookingModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    function submitForm(e) {
+        e.preventDefault();
+        const name = document.getElementById('patientName').value.trim();
+        const phone = document.getElementById('patientPhone').value.trim();
+        const email = document.getElementById('patientEmail').value.trim();
+        const comment = document.getElementById('patientComment').value.trim();
+        if (!name || !phone) {
+            document.getElementById('formError').textContent = 'Пожалуйста, заполните имя и телефон';
+            document.getElementById('formError').classList.add('active');
+            return;
+        }
+        document.getElementById('formError').classList.remove('active');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').textContent = '⏳ Отправка...';
+        bookings.push({
+            id: Date.now(),
+            patientName: name,
+            phone,
+            email,
+            comment,
+            doctor: selectedDoctor,
+            time: selectedTime,
+            status: 'pending',
+            createdAt: new Date().toLocaleString()
+        });
+        document.getElementById('formContainer').style.display = 'none';
+        document.getElementById('formSuccess').classList.add('active');
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
+        if (currentUser === 'admin') renderAdminPanel();
+        if (currentUser && currentUser.login) renderDoctorCabinet();
+    }
+
+    // ================================================================
+    // 13. КАБИНЕТ ВРАЧА
     // ================================================================
 
     function renderDoctorCabinet() {
@@ -1862,6 +2105,7 @@
                 <strong>🔑 Ваши данные для входа:</strong><br />
                 Логин: <strong>${doc.login}</strong> &nbsp;|&nbsp; Пароль: <strong>${doc.password}</strong>
                 <button class="copy-btn" onclick="copyLoginInfo('${doc.login}', '${doc.password}')">📋 Скопировать</button>
+                <br><span style="font-size:12px;color:#7a8fa5;">Секретный вопрос: ${doc.secretQuestion || 'не задан'}</span>
             </div>
 
             ${!isEditing ? `
@@ -1899,15 +2143,15 @@
                             <textarea id="editBio" rows="3">${doc.bio || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>Симптомы / заболевания (через запятую)</label>
+                            <label>Симптомы (через запятую)</label>
                             <input type="text" id="editSymptoms" value="${doc.symptoms ? doc.symptoms.join(', ') : ''}" placeholder="цистит, простатит, мочекаменная болезнь" />
                         </div>
                         <div class="form-group">
-                            <label>Новый пароль (оставьте пустым, чтобы не менять)</label>
-                            <input type="text" id="editPassword" placeholder="Введите новый пароль" />
+                            <label>Новый пароль</label>
+                            <input type="text" id="editPassword" placeholder="Оставьте пустым, чтобы не менять" />
                         </div>
                         <div class="form-group">
-                            <label>📷 Фото (аватарка)</label>
+                            <label>📷 Фото</label>
                             <input type="file" id="editPhoto" accept="image/*" onchange="previewEditPhoto(event)" />
                             <div class="file-preview" id="editPhotoPreview">${doc.photo ? `<img src="${doc.photo}" style="max-width:80px;max-height:80px;border-radius:8px;border:2px solid #e8edf3;" />` : 'Файл не загружен'}</div>
                         </div>
@@ -1989,7 +2233,7 @@
     }
 
     // ================================================================
-    // 11. ФУНКЦИИ РЕДАКТИРОВАНИЯ (сокращены для экономии места)
+    // 14. ФУНКЦИИ РЕДАКТИРОВАНИЯ И РАСПИСАНИЯ
     // ================================================================
 
     function startEdit() {
@@ -2089,7 +2333,6 @@
         if (tempEditCertificate) doc.certificate = tempEditCertificate;
         if (tempEditQualification) doc.qualification = tempEditQualification;
 
-        // Если врач загрузил новые документы, сбрасываем статус проверки
         if (tempEditDiploma || tempEditCertificate || tempEditQualification) {
             doc.verified = false;
             doc.moderationComment = 'Документы обновлены, требуется повторная проверка';
@@ -2104,10 +2347,6 @@
             if (currentUser === 'admin') renderAdminPanel();
         }, 1500);
     }
-
-    // ================================================================
-    // 12. РАСПИСАНИЕ И ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-    // ================================================================
 
     function addSlot() {
         if (!currentUser || !currentUser.login) return;
@@ -2145,149 +2384,18 @@
     }
 
     // ================================================================
-    // 13. ПОИСК И ОТРИСОВКА (ПУБЛИЧНАЯ ЧАСТЬ)
-    // ================================================================
-
-    function searchDoctors() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        const container = document.getElementById('doctorsContainer');
-        let results = DOCTORS;
-        if (currentFilter === 'verified') results = results.filter(d => d.verified);
-        if (query) {
-            results = results.filter(d => {
-                const fullName = d.full_name.toLowerCase();
-                const spec = d.specialization.toLowerCase();
-                const symptoms = d.symptoms.map(s => s.toLowerCase()).join(' ');
-                return fullName.includes(query) || spec.includes(query) || symptoms.includes(query);
-            });
-        }
-        results.sort((a, b) => (a.verified === b.verified) ? 0 : a.verified ? -1 : 1);
-        renderDoctors(results);
-    }
-
-    function setFilter(filter) {
-        currentFilter = filter;
-        document.querySelectorAll('#filterBar button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.filter === filter);
-        });
-        searchDoctors();
-    }
-
-    function renderDoctors(doctors) {
-        const container = document.getElementById('doctorsContainer');
-        if (!doctors.length) {
-            container.innerHTML = '<div class="no-results">👀 Врачей не найдено</div>';
-            return;
-        }
-        container.innerHTML = doctors.map(doc => {
-            const avatarHtml = doc.photo ?
-                `<img src="${doc.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;" />` :
-                doc.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-            const symptomsHtml = doc.symptoms.map(s => `<span>${s}</span>`).join(' ');
-            const verifiedBadge = doc.verified ? '<span class="verified-badge">✅ Проверен</span>' : '';
-            const slotsHtml = doc.schedule.map(time =>
-                `<div class="slot" onclick="openBooking('${doc.full_name}', '${time}')">🕐 ${time}</div>`
-            ).join('');
-            return `
-                <div class="doctor-card">
-                    <div class="avatar">${avatarHtml}</div>
-                    <h3>${doc.full_name} ${verifiedBadge}</h3>
-                    <div class="specialization">${doc.specialization}</div>
-                    <div class="symptoms">${symptomsHtml}</div>
-                    <div class="info-row">
-                        <span class="price">${doc.price} <small>сом</small></span>
-                        <span>Стаж ${doc.experience} лет</span>
-                    </div>
-                    <div style="margin-top:14px; border-top:1px solid #eef3f9; padding-top:12px;">
-                        <p style="font-size:13px; color:#5a6f88; margin-bottom:8px; font-weight:600;">📅 Доступное время:</p>
-                        <div style="display:flex; flex-wrap:wrap; gap:8px;">${slotsHtml}</div>
-                    </div>
-                    <div style="margin-top:14px;">
-                        <button onclick="openBooking('${doc.full_name}', '')" class="btn-chat">💬 Записаться</button>
-                    </div>
-                    ${doc.bio ? `<p style="font-size:13px;color:#5a6f88;margin-top:12px;border-top:1px solid #eef3f9;padding-top:10px;">${doc.bio}</p>` : ''}
-                </div>
-            `;
-        }).join('');
-    }
-
-    // ================================================================
-    // 14. ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
-    // ================================================================
-
-    let selectedDoctor = '';
-    let selectedTime = '';
-
-    function openBooking(doctorName, time) {
-        selectedDoctor = doctorName;
-        selectedTime = time || 'не выбрано';
-        document.getElementById('modalDoctorInfo').textContent = `Врач: ${doctorName}`;
-        document.getElementById('modalTimeInfo').textContent = `Время: ${time || 'не выбрано'}`;
-        document.getElementById('bookingForm').reset();
-        document.getElementById('formContainer').style.display = 'block';
-        document.getElementById('formSuccess').classList.remove('active');
-        document.getElementById('formError').classList.remove('active');
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
-        document.getElementById('bookingModal').classList.add('active');
-    }
-
-    function closeModal() {
-        document.getElementById('bookingModal').classList.remove('active');
-    }
-    document.getElementById('bookingModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
-
-    function submitForm(e) {
-        e.preventDefault();
-        const name = document.getElementById('patientName').value.trim();
-        const phone = document.getElementById('patientPhone').value.trim();
-        const email = document.getElementById('patientEmail').value.trim();
-        const comment = document.getElementById('patientComment').value.trim();
-        if (!name || !phone) {
-            document.getElementById('formError').textContent = 'Пожалуйста, заполните имя и телефон';
-            document.getElementById('formError').classList.add('active');
-            return;
-        }
-        document.getElementById('formError').classList.remove('active');
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = '⏳ Отправка...';
-        bookings.push({
-            id: Date.now(),
-            patientName: name,
-            phone,
-            email,
-            comment,
-            doctor: selectedDoctor,
-            time: selectedTime,
-            status: 'pending',
-            createdAt: new Date().toLocaleString()
-        });
-        document.getElementById('formContainer').style.display = 'none';
-        document.getElementById('formSuccess').classList.add('active');
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').textContent = '📩 Отправить заявку';
-        if (currentUser === 'admin') renderAdminPanel();
-        if (currentUser && currentUser.login) renderDoctorCabinet();
-    }
-
-    // ================================================================
-    // 15. ОБРАБОТКА ССЫЛКИ-ПРИГЛАШЕНИЯ
+    // 15. ЗАПУСК
     // ================================================================
 
     function handleRegisterLink() {
         const params = new URLSearchParams(window.location.search);
         const token = params.get('register');
         if (token) {
-            openRegister(token);
+            inviteToken = token;
+            openRegister();
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
-
-    // ================================================================
-    // 16. ЗАПУСК
-    // ================================================================
 
     document.addEventListener('DOMContentLoaded', () => {
         renderNav();
@@ -2298,6 +2406,9 @@
         });
         document.getElementById('loginModal').addEventListener('click', function(e) {
             if (e.target === this) closeLoginModal();
+        });
+        document.getElementById('forgotModal').addEventListener('click', function(e) {
+            if (e.target === this) closeForgotModal();
         });
         document.getElementById('moderationModal').addEventListener('click', function(e) {
             if (e.target === this) closeModerationModal();
